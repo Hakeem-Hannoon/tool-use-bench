@@ -3,43 +3,45 @@
 A benchmark that measures how reliably LLMs **select and emit the correct
 tool calls**. It runs a fixed set of 67 tool-calling samples against multiple
 models, repeats each sample 5 times per model by default, scores every run
-deterministically (no LLM judge), and writes machine-readable JSON results
-plus a normalized Markdown report.
+with deterministic data comparison, and writes machine-readable JSON
+results plus a normalized Markdown report.
 
 ## Why this exists
 
-This benchmark was built to answer a production question, not an academic
-one: **which model should power each agentic workload, and at what cost?**
-It drives model selection for my products — most notably
+This benchmark exists to answer one production question: **which model
+should power each agentic workload, and at what cost?** It drives model
+selection for the things I build — most notably
 [Spotter](https://spotter.com), an agent-heavy training companion that keeps
 track of your gym progress. Nearly everything Spotter does rides on tool
 calls: logging sets, scheduling sessions, querying training history,
 nudging you at the right moment. At that level of dependence, a model that
-fumbles arguments 3% of the time isn't 3% worse — it's a broken feature.
+fumbles arguments on 3% of calls ships a broken feature to someone every
+single day.
 
 tool-call-bench turns that choice into data. Because every run is scored
 deterministically and broken down by category (single calls, parallel
 fan-outs, argument precision, decoy resistance, ordering), each candidate
 model gets a reliability profile that maps directly onto real app
-workloads. Read that profile against the provider's price per call and the
-cost/capability trade-off stops being a matter of taste: the cheapest model
-that clears the reliability bar for a given workload wins that workload.
+workloads. Reading that profile against the provider's price per call
+settles the cost/capability trade-off on evidence: the cheapest model that
+clears the reliability bar for a given workload wins that workload.
 
 ## What it measures
 
 - Did the model call **all required tools**?
 - Did it call them with **exactly the right arguments** (values, types,
-  required keys, no extras)?
+  required keys, zero extras)?
 - Did it respect **required ordering** when order matters?
 - Did it avoid **extra tool calls** when extras are disallowed?
 - Did it correctly **decline to call any tool** on decoy prompts?
-- Did it emit **real provider-native tool calls** (not JSON pasted into
-  text)?
+- Did it emit its calls through the provider's **native tool-calling
+  mechanism**? JSON printed inside a text response fails by default.
 
-## What it does NOT measure
+## Out of scope
 
 - Natural-language answer quality, style, or helpfulness.
-- Tool *results* — tools are mock schemas and are never executed.
+- Tool *results* — tools are mock schemas; scoring looks only at the call
+  objects a model emits.
 - Multi-turn behavior — every sample is a single turn.
 
 A run is **successful only if the model emits all required tool calls
@@ -52,7 +54,7 @@ correctly**. Any one of the following fails the entire run:
 - an unexpected extra argument is present (when exact arguments required),
 - an extra tool call is made while `allow_extra_tool_calls` is false,
 - required ordering is violated,
-- the model returns only text instead of real tool calls,
+- the model answers in plain text and emits zero tool calls,
 - the provider call times out, or
 - the provider returns an execution error after retries.
 
@@ -76,12 +78,9 @@ cp .env.example .env
 # edit .env
 ```
 
-Secrets are read **only** from environment variables at runtime. They are
-never written to any output file — config snapshots store environment
-variable *names*, never values.
-
-> ⚠️ **Never commit `.env` or API keys.** `.env` is gitignored; keep it
-> that way.
+Secrets are read **only** from environment variables at runtime, and they
+stay out of every output file: config snapshots record just the
+environment variable *names*. `.env` is gitignored.
 
 ## Quick start
 
@@ -113,7 +112,7 @@ uv run benchmark summarize outputs/results.json
 
 ## How scoring works
 
-Scoring is fully deterministic — plain data comparison, no LLM judge.
+Scoring is fully deterministic, implemented as plain data comparison.
 
 1. **Tool call extraction.** Only provider-native tool/function calls count:
    OpenAI Chat Completions `tool_calls` (and Responses-API `function_call`
@@ -128,10 +127,11 @@ Scoring is fully deterministic — plain data comparison, no LLM judge.
    appear in order; otherwise any order is accepted.
 3. **Argument comparison.** Arguments compare as JSON values. Strings are
    trimmed of surrounding whitespace when `trim_string_whitespace` is true.
-   Types are strict by default: `"5"` (string) never equals `5` (number)
-   unless the sample sets `allow_argument_coercion: true`. Integers and
-   floats are both JSON numbers, so `5` equals `5.0`; booleans are never
-   numbers. With `require_exact_arguments: true` the argument object must
+   Types are strict by default: `"5"` (string) and `5` (number) count as
+   different values unless the sample sets `allow_argument_coercion: true`.
+   Integers and floats are both JSON numbers, so `5` equals `5.0`, while
+   booleans form their own type. With `require_exact_arguments: true` the
+   argument object must
    match key-for-key (missing and extra keys both fail); with `false`,
    expected arguments must be a subset.
 4. **Verdict.** Each run yields a scoring result:
@@ -169,7 +169,7 @@ Exactly **67 samples**, each a standalone JSON file under
 | `single_tool` | 20 | One required call with precise arguments |
 | `multi_tool` | 10 | Several different tools in one turn (incl. `0067_multi_tool_complex_workflow`) |
 | `parallel_tools` | 8 | Independent same-tool fan-out calls |
-| `no_tool_decoy` | 8 | No call expected; any call fails |
+| `no_tool_decoy` | 8 | Zero calls expected; any call fails the run |
 | `argument_precision` | 10 | Exact dates, units, IDs, recipients, enums, nested objects, array order |
 | `ordering_required` | 6 | Calls must appear in a required order |
 | `tool_choice_under_ambiguity` | 5 | Similar/competing tools; the right one must be chosen |
@@ -180,7 +180,8 @@ unit conversion, current time, file search, document retrieval, spreadsheet
 update, GitHub issues and PRs, Slack channel + DM mocks, reminders,
 geocoding, restaurants, flight and hotel search mocks, code execution mock,
 database query mock, CRM update mock, refund lookup mock, and support
-tickets. All are **mock schemas** — nothing is executed.
+tickets. All are **mock schemas**; the benchmark judges the call objects a
+model emits and leaves execution out entirely.
 
 Sample schema (see `benchmark_samples/tool_calling/0001_weather_current.json`):
 
@@ -304,10 +305,10 @@ combination:
 If a run is interrupted, rerunning the same command resumes and skips
 completed runs. Checkpoint keys include the benchmark version, config hash,
 sample hash, provider, model, sample id, and run index — so changing the
-config or the samples never reuses stale results. Completed runs are never
-silently overwritten: with `--no-resume` and an existing checkpoint the run
-aborts with instructions; `--force` explicitly discards the checkpoint and
-reruns everything.
+config or sample set always starts fresh. The runner also refuses to
+silently overwrite completed runs: with `--no-resume` and an existing
+checkpoint it aborts with instructions, and `--force` explicitly discards
+the checkpoint and reruns everything.
 
 ```bash
 uv run benchmark run examples/config.example.json --resume     # default
@@ -321,7 +322,7 @@ Everything the benchmark controls is deterministic:
 
 - model, sample, and run ordering are fixed (config order → sample id →
   run index);
-- scoring is pure data comparison — no LLM judge;
+- scoring is pure data comparison;
 - default temperature is `0`;
 - the exact redacted config is snapshotted to
   `outputs/run_config.snapshot.json` together with the config hash, sample
@@ -332,8 +333,8 @@ Everything the benchmark controls is deterministic:
 **Caveat:** provider APIs may still produce nondeterministic outputs even
 at temperature 0 (backend changes, sampling implementation details,
 hardware). The benchmark inputs, ordering, scoring, config snapshot, sample
-hash, and output formats are reproducible; individual model outputs may not
-be.
+hash, and output formats are fully reproducible, while individual model
+outputs can vary between executions.
 
 ## Output files
 
@@ -354,7 +355,7 @@ A rendered example report: [`analysis/example_report.md`](analysis/example_repor
 ## The Markdown report
 
 `reports/tool_call_report.md` is generated **from `outputs/results.json`**
-(single calculation path — the report and the JSON cannot disagree). It
+(a single calculation path keeps the report and the JSON in lockstep). It
 contains generation timestamps, git commit, version, config path + hash,
 sample hash, run counts, an overall ranking sorted by success rate,
 per-model / per-category / per-sample tables, a failure breakdown, the most
@@ -369,7 +370,7 @@ output, and the scorer's reason).
 uv run pytest
 ```
 
-Provider SDKs are never called in tests — provider normalization is tested
+The test suite runs fully offline: provider normalization is exercised
 against recorded response shapes, and the checkpoint/runner tests use a
 fake in-process provider.
 
@@ -397,10 +398,11 @@ outputs/, reports/   generated artifacts (gitignored)
   parameters — drop them per model with `"api_params": {"temperature": null}`.
 - Anthropic requires `max_tokens` (default 4096 here); very long parallel
   call sets may need a higher value via `api_params`.
-- Gemini/Vertex function declarations don't accept `additionalProperties`;
-  the adapter strips it when converting schemas (samples still validate the
+- Gemini/Vertex function declarations reject `additionalProperties`; the
+  adapter strips it when converting schemas (samples still validate the
   strict schema shape).
-- Vertex AI uses Application Default Credentials, not an API key.
+- Vertex AI authenticates through Application Default Credentials; set
+  `VERTEXAI_PROJECT_ID` and `VERTEXAI_LOCATION` before running.
 - OpenRouter normalizes many vendors to the OpenAI shape, but vendor quirks
   upstream of OpenRouter can still surface as provider errors — these are
   tracked separately as `provider_error_failures`.
