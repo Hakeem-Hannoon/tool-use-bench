@@ -1,0 +1,118 @@
+{
+  "id": "0061_ticket_then_email",
+  "category": "ordering_required",
+  "difficulty": "hard",
+  "prompt": "In this exact order: first create a high-priority support ticket with subject 'Checkout latency spike' and description 'p95 checkout latency exceeded 4 seconds after the 14:00 deploy.', then send an email to ops@example.com with subject 'Ticket filed: checkout latency' and body 'Tracking the latency spike in a new high-priority ticket.'",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_support_ticket",
+        "description": "Create a customer support ticket.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "description": "Short ticket subject."
+            },
+            "description": {
+              "type": "string",
+              "description": "Full description of the problem."
+            },
+            "priority": {
+              "type": "string",
+              "description": "Ticket priority.",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "urgent"
+              ]
+            },
+            "customer_email": {
+              "type": "string",
+              "description": "Optional customer email address."
+            }
+          },
+          "required": [
+            "subject",
+            "description",
+            "priority"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_email",
+        "description": "Send an email immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_support_ticket",
+      "arguments": {
+        "subject": "Checkout latency spike",
+        "description": "p95 checkout latency exceeded 4 seconds after the 14:00 deploy.",
+        "priority": "high"
+      }
+    },
+    {
+      "name": "send_email",
+      "arguments": {
+        "to": [
+          "ops@example.com"
+        ],
+        "subject": "Ticket filed: checkout latency",
+        "body": "Tracking the latency spike in a new high-priority ticket."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Ticket first, notification second, with verbatim text in both."
+}

@@ -1,0 +1,70 @@
+{
+  "id": "0051_github_labels_order",
+  "category": "argument_precision",
+  "difficulty": "hard",
+  "prompt": "Create an issue in acme/mobile-app titled 'Crash on launch when offline' with body 'App crashes on cold start when the device has no connectivity.' Apply these labels in this exact order: bug, ios, p1.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_github_issue",
+        "description": "Create a GitHub issue in a repository.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "type": "string",
+              "description": "Repository in 'owner/name' form, e.g. 'acme/api'."
+            },
+            "title": {
+              "type": "string",
+              "description": "Issue title."
+            },
+            "body": {
+              "type": "string",
+              "description": "Issue body text."
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional labels to apply, in order."
+            }
+          },
+          "required": [
+            "repo",
+            "title",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_github_issue",
+      "arguments": {
+        "repo": "acme/mobile-app",
+        "title": "Crash on launch when offline",
+        "body": "App crashes on cold start when the device has no connectivity.",
+        "labels": [
+          "bug",
+          "ios",
+          "p1"
+        ]
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "An ordered array argument: the labels list must match element-for-element in order."
+}

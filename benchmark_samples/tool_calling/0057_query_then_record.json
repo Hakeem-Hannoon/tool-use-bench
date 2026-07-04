@@ -1,0 +1,96 @@
+{
+  "id": "0057_query_then_record",
+  "category": "ordering_required",
+  "difficulty": "hard",
+  "prompt": "In this exact order: first run the query SELECT COUNT(*) FROM signups WHERE plan = 'pro' against the 'growth' database, then set cell D4 on the 'Metrics' sheet of spreadsheet SS-METRICS-26 to the text 'exported'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "query_database",
+        "description": "Run a read-only SQL query against a named database.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "SQL query to execute, exactly as provided."
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name, e.g. 'sales'."
+            }
+          },
+          "required": [
+            "query",
+            "database"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_spreadsheet_cell",
+        "description": "Set the value of a single spreadsheet cell.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "spreadsheet_id": {
+              "type": "string",
+              "description": "Spreadsheet ID, e.g. 'SS-778'."
+            },
+            "sheet_name": {
+              "type": "string",
+              "description": "Name of the sheet tab."
+            },
+            "cell": {
+              "type": "string",
+              "description": "Cell reference in A1 notation, e.g. 'B2'."
+            },
+            "value": {
+              "type": "string",
+              "description": "New cell value, as text."
+            }
+          },
+          "required": [
+            "spreadsheet_id",
+            "sheet_name",
+            "cell",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "query_database",
+      "arguments": {
+        "query": "SELECT COUNT(*) FROM signups WHERE plan = 'pro'",
+        "database": "growth"
+      }
+    },
+    {
+      "name": "update_spreadsheet_cell",
+      "arguments": {
+        "spreadsheet_id": "SS-METRICS-26",
+        "sheet_name": "Metrics",
+        "cell": "D4",
+        "value": "exported"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Export happens only after the query; reversed order fails."
+}

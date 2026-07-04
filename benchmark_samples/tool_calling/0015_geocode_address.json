@@ -1,0 +1,46 @@
+{
+  "id": "0015_geocode_address",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Geocode the address '1600 Pennsylvania Avenue NW, Washington, DC'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "geocode_address",
+        "description": "Convert a street address or place name into geographic coordinates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "address": {
+              "type": "string",
+              "description": "Address or place name to geocode."
+            }
+          },
+          "required": [
+            "address"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "geocode_address",
+      "arguments": {
+        "address": "1600 Pennsylvania Avenue NW, Washington, DC"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests passing a multi-part street address through verbatim."
+}

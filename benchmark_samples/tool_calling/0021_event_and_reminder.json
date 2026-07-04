@@ -1,0 +1,115 @@
+{
+  "id": "0021_event_and_reminder",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "Two tasks: (1) Create a calendar event titled 'Team offsite' on 2026-09-12 from 09:00 to 17:00. (2) Create a reminder titled 'Book offsite venue' due on 2026-08-29.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_calendar_event",
+        "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Event title."
+            },
+            "date": {
+              "type": "string",
+              "description": "Event date, format YYYY-MM-DD."
+            },
+            "start_time": {
+              "type": "string",
+              "description": "Start time, 24-hour format HH:MM."
+            },
+            "end_time": {
+              "type": "string",
+              "description": "End time, 24-hour format HH:MM."
+            },
+            "location": {
+              "type": "string",
+              "description": "Optional event location."
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of attendee email addresses."
+            }
+          },
+          "required": [
+            "title",
+            "date",
+            "start_time",
+            "end_time"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_reminder",
+        "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "What to be reminded about."
+            },
+            "due_date": {
+              "type": "string",
+              "description": "Due date, format YYYY-MM-DD."
+            },
+            "due_time": {
+              "type": "string",
+              "description": "Optional due time, 24-hour HH:MM."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Optional additional notes."
+            }
+          },
+          "required": [
+            "title",
+            "due_date"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_calendar_event",
+      "arguments": {
+        "title": "Team offsite",
+        "date": "2026-09-12",
+        "start_time": "09:00",
+        "end_time": "17:00"
+      }
+    },
+    {
+      "name": "create_reminder",
+      "arguments": {
+        "title": "Book offsite venue",
+        "due_date": "2026-08-29"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Two different tools must both be called; order does not matter."
+}

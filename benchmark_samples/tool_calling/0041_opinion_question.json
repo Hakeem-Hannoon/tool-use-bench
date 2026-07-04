@@ -1,0 +1,69 @@
+{
+  "id": "0041_opinion_question",
+  "category": "no_tool_decoy",
+  "difficulty": "easy",
+  "prompt": "In your opinion, what makes code easy to read?",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "description": "Search the web.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query."
+            },
+            "num_results": {
+              "type": "integer",
+              "description": "Number of results to return."
+            }
+          },
+          "required": [
+            "query",
+            "num_results"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "query_database",
+        "description": "Run a read-only SQL query against a named database.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "SQL query to execute, exactly as provided."
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name, e.g. 'sales'."
+            }
+          },
+          "required": [
+            "query",
+            "database"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "An opinion question that neither search nor a database can answer."
+}

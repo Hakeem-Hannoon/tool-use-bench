@@ -1,0 +1,101 @@
+{
+  "id": "0028_time_and_event",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "Check the current time in the 'Europe/Paris' timezone, and create a calendar event titled 'Paris standup' on 2026-07-10 from 09:30 to 09:45.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_current_time",
+        "description": "Get the current time in a timezone.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+            }
+          },
+          "required": [
+            "timezone"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_calendar_event",
+        "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Event title."
+            },
+            "date": {
+              "type": "string",
+              "description": "Event date, format YYYY-MM-DD."
+            },
+            "start_time": {
+              "type": "string",
+              "description": "Start time, 24-hour format HH:MM."
+            },
+            "end_time": {
+              "type": "string",
+              "description": "End time, 24-hour format HH:MM."
+            },
+            "location": {
+              "type": "string",
+              "description": "Optional event location."
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of attendee email addresses."
+            }
+          },
+          "required": [
+            "title",
+            "date",
+            "start_time",
+            "end_time"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_current_time",
+      "arguments": {
+        "timezone": "Europe/Paris"
+      }
+    },
+    {
+      "name": "create_calendar_event",
+      "arguments": {
+        "title": "Paris standup",
+        "date": "2026-07-10",
+        "start_time": "09:30",
+        "end_time": "09:45"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A read-only lookup plus an event creation in one turn."
+}

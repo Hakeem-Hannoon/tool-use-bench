@@ -1,0 +1,58 @@
+{
+  "id": "0050_currency_decimal_amount",
+  "category": "argument_precision",
+  "difficulty": "medium",
+  "prompt": "Convert 1,499.99 Canadian dollars to US dollars.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "convert_currency",
+        "description": "Convert an amount between currencies using ISO 4217 codes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "description": "Amount to convert, as a number."
+            },
+            "from_currency": {
+              "type": "string",
+              "description": "3-letter uppercase ISO currency code, e.g. 'USD'."
+            },
+            "to_currency": {
+              "type": "string",
+              "description": "3-letter uppercase ISO currency code, e.g. 'EUR'."
+            }
+          },
+          "required": [
+            "amount",
+            "from_currency",
+            "to_currency"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "convert_currency",
+      "arguments": {
+        "amount": 1499.99,
+        "from_currency": "CAD",
+        "to_currency": "USD"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A thousands separator must not survive into the numeric amount; currency names map to ISO codes."
+}

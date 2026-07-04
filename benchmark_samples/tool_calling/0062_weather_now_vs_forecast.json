@@ -1,0 +1,91 @@
+{
+  "id": "0062_weather_now_vs_forecast",
+  "category": "tool_choice_under_ambiguity",
+  "difficulty": "medium",
+  "prompt": "Will it rain in Seattle over the next 5 days? Use celsius.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City and country, e.g. 'Toronto, Canada'."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Temperature unit.",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "location",
+            "unit"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather_forecast",
+        "description": "Get a multi-day weather forecast for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City name, e.g. 'Seattle'."
+            },
+            "days": {
+              "type": "integer",
+              "description": "Number of days to forecast."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Temperature unit.",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "location",
+            "days",
+            "unit"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_weather_forecast",
+      "arguments": {
+        "location": "Seattle",
+        "days": 5,
+        "unit": "celsius"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "'Next 5 days' requires the forecast tool, not current weather."
+}

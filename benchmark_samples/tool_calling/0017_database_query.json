@@ -1,0 +1,52 @@
+{
+  "id": "0017_database_query",
+  "category": "single_tool",
+  "difficulty": "medium",
+  "prompt": "Run this SQL against the 'sales' database: SELECT COUNT(*) FROM orders WHERE status = 'pending'",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "query_database",
+        "description": "Run a read-only SQL query against a named database.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "SQL query to execute, exactly as provided."
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name, e.g. 'sales'."
+            }
+          },
+          "required": [
+            "query",
+            "database"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "query_database",
+      "arguments": {
+        "query": "SELECT COUNT(*) FROM orders WHERE status = 'pending'",
+        "database": "sales"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests passing a SQL string through without rewriting it."
+}

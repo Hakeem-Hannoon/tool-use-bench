@@ -1,0 +1,91 @@
+{
+  "id": "0058_geocode_then_restaurants",
+  "category": "ordering_required",
+  "difficulty": "medium",
+  "prompt": "First geocode 'Shibuya Crossing, Tokyo', then search for ramen restaurants in 'Shibuya, Tokyo'. Keep that order.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "geocode_address",
+        "description": "Convert a street address or place name into geographic coordinates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "address": {
+              "type": "string",
+              "description": "Address or place name to geocode."
+            }
+          },
+          "required": [
+            "address"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_restaurants",
+        "description": "Find restaurants in a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City or neighborhood, e.g. 'Lisbon, Portugal'."
+            },
+            "cuisine": {
+              "type": "string",
+              "description": "Optional cuisine type, lowercase, e.g. 'seafood'."
+            },
+            "price_range": {
+              "type": "string",
+              "description": "Optional price tier.",
+              "enum": [
+                "$",
+                "$$",
+                "$$$",
+                "$$$$"
+              ]
+            },
+            "open_now": {
+              "type": "boolean",
+              "description": "If true, only restaurants open right now."
+            }
+          },
+          "required": [
+            "location"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "geocode_address",
+      "arguments": {
+        "address": "Shibuya Crossing, Tokyo"
+      }
+    },
+    {
+      "name": "search_restaurants",
+      "arguments": {
+        "location": "Shibuya, Tokyo",
+        "cuisine": "ramen"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Locate first, then search nearby restaurants."
+}

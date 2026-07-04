@@ -1,0 +1,58 @@
+{
+  "id": "0043_hypothetical_flight",
+  "category": "no_tool_decoy",
+  "difficulty": "medium",
+  "prompt": "Roughly how long is a nonstop flight from New York to London? No need to search — a ballpark figure is fine.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_flights",
+        "description": "Search flights between airports. Airports use 3-letter uppercase IATA codes. Dates use YYYY-MM-DD.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "string",
+              "description": "Origin airport IATA code, e.g. 'SFO'."
+            },
+            "destination": {
+              "type": "string",
+              "description": "Destination airport IATA code, e.g. 'NRT'."
+            },
+            "departure_date": {
+              "type": "string",
+              "description": "Departure date, format YYYY-MM-DD."
+            },
+            "return_date": {
+              "type": "string",
+              "description": "Optional return date for round trips, YYYY-MM-DD."
+            },
+            "passengers": {
+              "type": "integer",
+              "description": "Number of passengers."
+            }
+          },
+          "required": [
+            "origin",
+            "destination",
+            "departure_date",
+            "passengers"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "The user explicitly declines a search; a flight search anyway fails the run."
+}

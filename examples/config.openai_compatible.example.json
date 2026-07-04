@@ -1,0 +1,52 @@
+{
+  "benchmark": "benchmark_samples/full_benchmark.json",
+  "output": "outputs/results.json",
+  "report": "reports/tool_call_report.md",
+  "runs_per_sample": 5,
+  "concurrency": 5,
+  "temperature": 0,
+  "max_retries": 3,
+  "timeout_seconds": 90,
+  "allow_text_tool_call_fallback": false,
+  "resume": true,
+  "force": false,
+  "seed": 12345,
+  "save_raw_responses": true,
+  "models": [
+    {
+      "name": "deepseek-chat",
+      "provider": "openai_compatible",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "endpoint": "https://api.deepseek.com/v1",
+      "api_params": {}
+    },
+    {
+      "name": "llama-3.3-70b-versatile",
+      "provider": "openai_compatible",
+      "api_key_env": "GROQ_API_KEY",
+      "endpoint": "https://api.groq.com/openai/v1",
+      "api_params": {}
+    },
+    {
+      "name": "mistral-large-latest",
+      "provider": "openai_compatible",
+      "api_key_env": "MISTRAL_API_KEY",
+      "endpoint": "https://api.mistral.ai/v1",
+      "api_params": {}
+    },
+    {
+      "name": "grok-3",
+      "provider": "openai_compatible",
+      "api_key_env": "XAI_API_KEY",
+      "endpoint": "https://api.x.ai/v1",
+      "api_params": {}
+    },
+    {
+      "name": "anthropic/claude-sonnet-4",
+      "provider": "openrouter",
+      "api_key_env": "OPENROUTER_API_KEY",
+      "endpoint": null,
+      "api_params": {}
+    }
+  ]
+}

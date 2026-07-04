@@ -1,0 +1,110 @@
+{
+  "id": "0063_draft_vs_send",
+  "category": "tool_choice_under_ambiguity",
+  "difficulty": "medium",
+  "prompt": "Prepare an email to jordan@example.com with subject 'Renewal quote' and body 'Quote attached for the annual renewal.' — but do NOT send it yet; I want to review it first.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_email_draft",
+        "description": "Create an email draft WITHOUT sending it.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_email",
+        "description": "Send an email immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_email_draft",
+      "arguments": {
+        "to": [
+          "jordan@example.com"
+        ],
+        "subject": "Renewal quote",
+        "body": "Quote attached for the annual renewal."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "'Do not send' means the draft tool; send_email fails the run."
+}

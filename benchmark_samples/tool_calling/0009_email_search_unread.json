@@ -1,0 +1,63 @@
+{
+  "id": "0009_email_search_unread",
+  "category": "single_tool",
+  "difficulty": "medium",
+  "prompt": "Search my inbox for unread emails matching 'invoice'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_emails",
+        "description": "Search email messages.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Keyword to search subject and body."
+            },
+            "folder": {
+              "type": "string",
+              "description": "Folder to search.",
+              "enum": [
+                "inbox",
+                "sent",
+                "archive",
+                "all"
+              ]
+            },
+            "unread_only": {
+              "type": "boolean",
+              "description": "If true, only return unread messages."
+            }
+          },
+          "required": [
+            "query",
+            "folder"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_emails",
+      "arguments": {
+        "query": "invoice",
+        "folder": "inbox",
+        "unread_only": true
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests mapping 'inbox' and 'unread' phrasing onto an enum folder and a boolean flag."
+}

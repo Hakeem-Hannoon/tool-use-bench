@@ -1,0 +1,69 @@
+{
+  "id": "0045_creative_writing",
+  "category": "no_tool_decoy",
+  "difficulty": "medium",
+  "prompt": "Write me a haiku about autumn leaves.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Execute a code snippet and return its output.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "description": "Programming language.",
+              "enum": [
+                "python",
+                "javascript",
+                "sql"
+              ]
+            },
+            "code": {
+              "type": "string",
+              "description": "Source code to execute, exactly as provided."
+            }
+          },
+          "required": [
+            "language",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "calculator",
+        "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "expression": {
+              "type": "string",
+              "description": "Arithmetic expression to evaluate, without spaces."
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Creative writing with irrelevant technical tools offered."
+}

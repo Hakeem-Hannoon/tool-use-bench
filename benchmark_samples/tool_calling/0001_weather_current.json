@@ -1,0 +1,56 @@
+{
+  "id": "0001_weather_current",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "What is the current weather in Toronto, Canada? Use Celsius.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City and country, e.g. 'Toronto, Canada'."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Temperature unit.",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "location",
+            "unit"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_weather",
+      "arguments": {
+        "location": "Toronto, Canada",
+        "unit": "celsius"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests whether the model calls the weather tool with the correct location and unit."
+}

@@ -1,0 +1,191 @@
+{
+  "id": "0067_multi_tool_complex_workflow",
+  "category": "multi_tool",
+  "difficulty": "hard",
+  "prompt": "Set up my contract review: (1) look up the contact record for Miguel Ortiz; (2) create a calendar event titled 'Contract review with Miguel Ortiz' on 2026-07-21 from 14:00 to 15:00; (3) send an email to miguel.ortiz@example.com with subject 'Contract review on July 21' and body 'Confirming our contract review at 2pm on July 21.'; (4) create a reminder titled 'Prepare contract notes' due on 2026-07-20.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "lookup_contact",
+        "description": "Look up a contact record by full name.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Full name of the contact, e.g. 'Priya Sharma'."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_calendar_event",
+        "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Event title."
+            },
+            "date": {
+              "type": "string",
+              "description": "Event date, format YYYY-MM-DD."
+            },
+            "start_time": {
+              "type": "string",
+              "description": "Start time, 24-hour format HH:MM."
+            },
+            "end_time": {
+              "type": "string",
+              "description": "End time, 24-hour format HH:MM."
+            },
+            "location": {
+              "type": "string",
+              "description": "Optional event location."
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of attendee email addresses."
+            }
+          },
+          "required": [
+            "title",
+            "date",
+            "start_time",
+            "end_time"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_email",
+        "description": "Send an email immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_reminder",
+        "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "What to be reminded about."
+            },
+            "due_date": {
+              "type": "string",
+              "description": "Due date, format YYYY-MM-DD."
+            },
+            "due_time": {
+              "type": "string",
+              "description": "Optional due time, 24-hour HH:MM."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Optional additional notes."
+            }
+          },
+          "required": [
+            "title",
+            "due_date"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "lookup_contact",
+      "arguments": {
+        "name": "Miguel Ortiz"
+      }
+    },
+    {
+      "name": "create_calendar_event",
+      "arguments": {
+        "title": "Contract review with Miguel Ortiz",
+        "date": "2026-07-21",
+        "start_time": "14:00",
+        "end_time": "15:00"
+      }
+    },
+    {
+      "name": "send_email",
+      "arguments": {
+        "to": [
+          "miguel.ortiz@example.com"
+        ],
+        "subject": "Contract review on July 21",
+        "body": "Confirming our contract review at 2pm on July 21."
+      }
+    },
+    {
+      "name": "create_reminder",
+      "arguments": {
+        "title": "Prepare contract notes",
+        "due_date": "2026-07-20"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Four tools in one workflow; every argument is pinned by the prompt, order is not enforced."
+}

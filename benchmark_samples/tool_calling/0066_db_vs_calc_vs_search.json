@@ -1,0 +1,97 @@
+{
+  "id": "0066_db_vs_calc_vs_search",
+  "category": "tool_choice_under_ambiguity",
+  "difficulty": "hard",
+  "prompt": "How many orders did we get in June 2026? Our own 'sales' database has the answer — run exactly: SELECT COUNT(*) FROM orders WHERE order_date BETWEEN '2026-06-01' AND '2026-06-30'. Don't search the web and don't try to compute it yourself.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "query_database",
+        "description": "Run a read-only SQL query against a named database.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "SQL query to execute, exactly as provided."
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name, e.g. 'sales'."
+            }
+          },
+          "required": [
+            "query",
+            "database"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "calculator",
+        "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "expression": {
+              "type": "string",
+              "description": "Arithmetic expression to evaluate, without spaces."
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "description": "Search the web.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query."
+            },
+            "num_results": {
+              "type": "integer",
+              "description": "Number of results to return."
+            }
+          },
+          "required": [
+            "query",
+            "num_results"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "query_database",
+      "arguments": {
+        "query": "SELECT COUNT(*) FROM orders WHERE order_date BETWEEN '2026-06-01' AND '2026-06-30'",
+        "database": "sales"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Three plausible tools; only the database query is correct."
+}

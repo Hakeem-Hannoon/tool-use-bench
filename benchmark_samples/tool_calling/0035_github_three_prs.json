@@ -1,0 +1,66 @@
+{
+  "id": "0035_github_three_prs",
+  "category": "parallel_tools",
+  "difficulty": "medium",
+  "prompt": "Fetch pull requests #101, #102, and #103 from the acme/mobile repository — one call per pull request.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_github_pull_request",
+        "description": "Fetch a GitHub pull request by number.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "type": "string",
+              "description": "Repository in 'owner/name' form."
+            },
+            "pr_number": {
+              "type": "integer",
+              "description": "Pull request number."
+            }
+          },
+          "required": [
+            "repo",
+            "pr_number"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_github_pull_request",
+      "arguments": {
+        "repo": "acme/mobile",
+        "pr_number": 101
+      }
+    },
+    {
+      "name": "get_github_pull_request",
+      "arguments": {
+        "repo": "acme/mobile",
+        "pr_number": 102
+      }
+    },
+    {
+      "name": "get_github_pull_request",
+      "arguments": {
+        "repo": "acme/mobile",
+        "pr_number": 103
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Batch lookup of three PR numbers as integers."
+}

@@ -1,0 +1,64 @@
+{
+  "id": "0044_acronym_definition",
+  "category": "no_tool_decoy",
+  "difficulty": "easy",
+  "prompt": "What does the acronym 'API' stand for?",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "description": "Search the web.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query."
+            },
+            "num_results": {
+              "type": "integer",
+              "description": "Number of results to return."
+            }
+          },
+          "required": [
+            "query",
+            "num_results"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_document",
+        "description": "Retrieve a document by its exact document ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "document_id": {
+              "type": "string",
+              "description": "Document ID, e.g. 'DOC-2024-0117'."
+            }
+          },
+          "required": [
+            "document_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A definition every model knows; both offered tools are decoys."
+}

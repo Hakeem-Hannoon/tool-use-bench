@@ -1,0 +1,54 @@
+{
+  "id": "0002_calendar_search",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Find events on my calendar that match the keyword 'dentist'. Search all dates — do not add any date filters.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_calendar_events",
+        "description": "Search calendar events by keyword. Dates are optional filters.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Keyword to search event titles and descriptions."
+            },
+            "start_date": {
+              "type": "string",
+              "description": "Earliest date to include, format YYYY-MM-DD."
+            },
+            "end_date": {
+              "type": "string",
+              "description": "Latest date to include, format YYYY-MM-DD."
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_calendar_events",
+      "arguments": {
+        "query": "dentist"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests a single calendar search with only the required argument; adding optional date filters fails the run."
+}

@@ -1,0 +1,82 @@
+{
+  "id": "0026_geocode_and_weather",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "Geocode the address '221B Baker Street, London' and get the current weather in 'London, UK' in celsius.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "geocode_address",
+        "description": "Convert a street address or place name into geographic coordinates.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "address": {
+              "type": "string",
+              "description": "Address or place name to geocode."
+            }
+          },
+          "required": [
+            "address"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City and country, e.g. 'Toronto, Canada'."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Temperature unit.",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "location",
+            "unit"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "geocode_address",
+      "arguments": {
+        "address": "221B Baker Street, London"
+      }
+    },
+    {
+      "name": "get_weather",
+      "arguments": {
+        "location": "London, UK",
+        "unit": "celsius"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Two independent location tools with distinct location strings."
+}

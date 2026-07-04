@@ -1,0 +1,71 @@
+{
+  "id": "0046_email_exact_recipients",
+  "category": "argument_precision",
+  "difficulty": "medium",
+  "prompt": "Send an email to alice.chen@example.com and raj.patel@example.com with subject 'Q3 planning follow-up' and body 'Slides are attached in the shared drive.'",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "send_email",
+        "description": "Send an email immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "send_email",
+      "arguments": {
+        "to": [
+          "alice.chen@example.com",
+          "raj.patel@example.com"
+        ],
+        "subject": "Q3 planning follow-up",
+        "body": "Slides are attached in the shared drive."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Both recipients must appear, in the order given, with verbatim subject and body."
+}

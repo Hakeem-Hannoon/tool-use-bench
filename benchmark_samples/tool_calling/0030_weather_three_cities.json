@@ -1,0 +1,70 @@
+{
+  "id": "0030_weather_three_cities",
+  "category": "parallel_tools",
+  "difficulty": "easy",
+  "prompt": "Get the current weather, in celsius, for each of these three cities: 'Toronto, Canada', 'Berlin, Germany', and 'Sydney, Australia'. Make one weather call per city.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Get current weather for a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City and country, e.g. 'Toronto, Canada'."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Temperature unit.",
+              "enum": [
+                "celsius",
+                "fahrenheit"
+              ]
+            }
+          },
+          "required": [
+            "location",
+            "unit"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_weather",
+      "arguments": {
+        "location": "Toronto, Canada",
+        "unit": "celsius"
+      }
+    },
+    {
+      "name": "get_weather",
+      "arguments": {
+        "location": "Berlin, Germany",
+        "unit": "celsius"
+      }
+    },
+    {
+      "name": "get_weather",
+      "arguments": {
+        "location": "Sydney, Australia",
+        "unit": "celsius"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Three independent calls to the same tool, any order."
+}

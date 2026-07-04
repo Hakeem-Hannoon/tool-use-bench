@@ -1,0 +1,52 @@
+{
+  "id": "0013_slack_message",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Post exactly \"Deploy complete.\" to the #deployments Slack channel.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "send_slack_message",
+        "description": "Post a message to a Slack channel. Channel names start with '#'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "description": "Channel name including the leading '#', e.g. '#general'."
+            },
+            "message": {
+              "type": "string",
+              "description": "Message text to post."
+            }
+          },
+          "required": [
+            "channel",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "send_slack_message",
+      "arguments": {
+        "channel": "#deployments",
+        "message": "Deploy complete."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests verbatim message text and a channel name with its '#'."
+}

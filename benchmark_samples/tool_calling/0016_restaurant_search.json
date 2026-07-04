@@ -1,0 +1,66 @@
+{
+  "id": "0016_restaurant_search",
+  "category": "single_tool",
+  "difficulty": "medium",
+  "prompt": "Find seafood restaurants in Lisbon, Portugal that are open right now.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_restaurants",
+        "description": "Find restaurants in a location.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City or neighborhood, e.g. 'Lisbon, Portugal'."
+            },
+            "cuisine": {
+              "type": "string",
+              "description": "Optional cuisine type, lowercase, e.g. 'seafood'."
+            },
+            "price_range": {
+              "type": "string",
+              "description": "Optional price tier.",
+              "enum": [
+                "$",
+                "$$",
+                "$$$",
+                "$$$$"
+              ]
+            },
+            "open_now": {
+              "type": "boolean",
+              "description": "If true, only restaurants open right now."
+            }
+          },
+          "required": [
+            "location"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_restaurants",
+      "arguments": {
+        "location": "Lisbon, Portugal",
+        "cuisine": "seafood",
+        "open_now": true
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests selecting the right optional arguments (cuisine, open_now) while leaving price_range out."
+}

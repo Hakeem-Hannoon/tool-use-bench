@@ -1,0 +1,74 @@
+{
+  "id": "0031_currency_three_targets",
+  "category": "parallel_tools",
+  "difficulty": "medium",
+  "prompt": "Convert 100 USD into each of EUR, GBP, and JPY — one conversion call per target currency.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "convert_currency",
+        "description": "Convert an amount between currencies using ISO 4217 codes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "description": "Amount to convert, as a number."
+            },
+            "from_currency": {
+              "type": "string",
+              "description": "3-letter uppercase ISO currency code, e.g. 'USD'."
+            },
+            "to_currency": {
+              "type": "string",
+              "description": "3-letter uppercase ISO currency code, e.g. 'EUR'."
+            }
+          },
+          "required": [
+            "amount",
+            "from_currency",
+            "to_currency"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "convert_currency",
+      "arguments": {
+        "amount": 100,
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      }
+    },
+    {
+      "name": "convert_currency",
+      "arguments": {
+        "amount": 100,
+        "from_currency": "USD",
+        "to_currency": "GBP"
+      }
+    },
+    {
+      "name": "convert_currency",
+      "arguments": {
+        "amount": 100,
+        "from_currency": "USD",
+        "to_currency": "JPY"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Fan-out over target currencies with a shared amount and source."
+}

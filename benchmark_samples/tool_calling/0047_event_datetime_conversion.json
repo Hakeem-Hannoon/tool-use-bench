@@ -1,0 +1,75 @@
+{
+  "id": "0047_event_datetime_conversion",
+  "category": "argument_precision",
+  "difficulty": "hard",
+  "prompt": "Book a calendar event titled 'Dentist appointment' on November 3, 2026 from 2:30pm to 3:15pm.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_calendar_event",
+        "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Event title."
+            },
+            "date": {
+              "type": "string",
+              "description": "Event date, format YYYY-MM-DD."
+            },
+            "start_time": {
+              "type": "string",
+              "description": "Start time, 24-hour format HH:MM."
+            },
+            "end_time": {
+              "type": "string",
+              "description": "End time, 24-hour format HH:MM."
+            },
+            "location": {
+              "type": "string",
+              "description": "Optional event location."
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of attendee email addresses."
+            }
+          },
+          "required": [
+            "title",
+            "date",
+            "start_time",
+            "end_time"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_calendar_event",
+      "arguments": {
+        "title": "Dentist appointment",
+        "date": "2026-11-03",
+        "start_time": "14:30",
+        "end_time": "15:15"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Natural-language date and 12-hour times must be converted to the YYYY-MM-DD and 24-hour HH:MM formats the schema requires."
+}

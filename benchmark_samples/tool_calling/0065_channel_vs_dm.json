@@ -1,0 +1,77 @@
+{
+  "id": "0065_channel_vs_dm",
+  "category": "tool_choice_under_ambiguity",
+  "difficulty": "medium",
+  "prompt": "Send a direct message to the Slack user marcus saying exactly \"Standup moved to 10am.\"",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "send_slack_message",
+        "description": "Post a message to a Slack channel. Channel names start with '#'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "description": "Channel name including the leading '#', e.g. '#general'."
+            },
+            "message": {
+              "type": "string",
+              "description": "Message text to post."
+            }
+          },
+          "required": [
+            "channel",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_slack_dm",
+        "description": "Send a direct message to a single Slack user by username (no '@' prefix).",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "user": {
+              "type": "string",
+              "description": "Username without the '@' prefix, e.g. 'marcus'."
+            },
+            "message": {
+              "type": "string",
+              "description": "Message text to send."
+            }
+          },
+          "required": [
+            "user",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "send_slack_dm",
+      "arguments": {
+        "user": "marcus",
+        "message": "Standup moved to 10am."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A DM to a user must use send_slack_dm, whose schema takes a bare username, not a '#channel'."
+}

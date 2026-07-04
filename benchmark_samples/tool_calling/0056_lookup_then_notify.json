@@ -1,0 +1,78 @@
+{
+  "id": "0056_lookup_then_notify",
+  "category": "ordering_required",
+  "difficulty": "medium",
+  "prompt": "First look up the contact record for Ana Silva. Then post exactly \"Reached out to Ana\" in the #sales channel. Do it in that order.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "lookup_contact",
+        "description": "Look up a contact record by full name.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Full name of the contact, e.g. 'Priya Sharma'."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_slack_message",
+        "description": "Post a message to a Slack channel. Channel names start with '#'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "description": "Channel name including the leading '#', e.g. '#general'."
+            },
+            "message": {
+              "type": "string",
+              "description": "Message text to post."
+            }
+          },
+          "required": [
+            "channel",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "lookup_contact",
+      "arguments": {
+        "name": "Ana Silva"
+      }
+    },
+    {
+      "name": "send_slack_message",
+      "arguments": {
+        "channel": "#sales",
+        "message": "Reached out to Ana"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "The lookup must come before the notification."
+}

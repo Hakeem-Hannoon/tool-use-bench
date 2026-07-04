@@ -1,0 +1,52 @@
+{
+  "id": "0007_web_search_basic",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Search the web for 'latest Mars rover discoveries' and return 5 results.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "description": "Search the web.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query."
+            },
+            "num_results": {
+              "type": "integer",
+              "description": "Number of results to return."
+            }
+          },
+          "required": [
+            "query",
+            "num_results"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "web_search",
+      "arguments": {
+        "query": "latest Mars rover discoveries",
+        "num_results": 5
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests a quoted query string plus an integer result count."
+}

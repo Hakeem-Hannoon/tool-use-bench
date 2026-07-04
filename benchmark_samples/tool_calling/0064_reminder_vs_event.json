@@ -1,0 +1,106 @@
+{
+  "id": "0064_reminder_vs_event",
+  "category": "tool_choice_under_ambiguity",
+  "difficulty": "medium",
+  "prompt": "Add a to-do for me: remind me to water the plants on 2026-07-10. Title it 'Water the plants'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_reminder",
+        "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "What to be reminded about."
+            },
+            "due_date": {
+              "type": "string",
+              "description": "Due date, format YYYY-MM-DD."
+            },
+            "due_time": {
+              "type": "string",
+              "description": "Optional due time, 24-hour HH:MM."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Optional additional notes."
+            }
+          },
+          "required": [
+            "title",
+            "due_date"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_calendar_event",
+        "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Event title."
+            },
+            "date": {
+              "type": "string",
+              "description": "Event date, format YYYY-MM-DD."
+            },
+            "start_time": {
+              "type": "string",
+              "description": "Start time, 24-hour format HH:MM."
+            },
+            "end_time": {
+              "type": "string",
+              "description": "End time, 24-hour format HH:MM."
+            },
+            "location": {
+              "type": "string",
+              "description": "Optional event location."
+            },
+            "attendees": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of attendee email addresses."
+            }
+          },
+          "required": [
+            "title",
+            "date",
+            "start_time",
+            "end_time"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_reminder",
+      "arguments": {
+        "title": "Water the plants",
+        "due_date": "2026-07-10"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A dated to-do is a reminder, not a calendar event."
+}

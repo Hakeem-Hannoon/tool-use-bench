@@ -1,0 +1,46 @@
+{
+  "id": "0008_contact_lookup",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Look up the contact record for Priya Sharma.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "lookup_contact",
+        "description": "Look up a contact record by full name.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Full name of the contact, e.g. 'Priya Sharma'."
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "lookup_contact",
+      "arguments": {
+        "name": "Priya Sharma"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests extracting a person's full name as the lookup key."
+}

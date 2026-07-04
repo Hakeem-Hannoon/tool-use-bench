@@ -1,0 +1,84 @@
+{
+  "id": "0040_gratitude_message",
+  "category": "no_tool_decoy",
+  "difficulty": "easy",
+  "prompt": "Thanks so much for your help earlier — everything works now!",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "send_slack_message",
+        "description": "Post a message to a Slack channel. Channel names start with '#'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "description": "Channel name including the leading '#', e.g. '#general'."
+            },
+            "message": {
+              "type": "string",
+              "description": "Message text to post."
+            }
+          },
+          "required": [
+            "channel",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_email",
+        "description": "Send an email immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Pure conversational gratitude; no action was requested."
+}

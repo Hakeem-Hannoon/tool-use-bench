@@ -1,0 +1,64 @@
+{
+  "id": "0048_spreadsheet_text_value",
+  "category": "argument_precision",
+  "difficulty": "medium",
+  "prompt": "In spreadsheet SS-2026-BUDGET, on the 'Q4' sheet, set cell C17 to the text value '48250'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "update_spreadsheet_cell",
+        "description": "Set the value of a single spreadsheet cell.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "spreadsheet_id": {
+              "type": "string",
+              "description": "Spreadsheet ID, e.g. 'SS-778'."
+            },
+            "sheet_name": {
+              "type": "string",
+              "description": "Name of the sheet tab."
+            },
+            "cell": {
+              "type": "string",
+              "description": "Cell reference in A1 notation, e.g. 'B2'."
+            },
+            "value": {
+              "type": "string",
+              "description": "New cell value, as text."
+            }
+          },
+          "required": [
+            "spreadsheet_id",
+            "sheet_name",
+            "cell",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "update_spreadsheet_cell",
+      "arguments": {
+        "spreadsheet_id": "SS-2026-BUDGET",
+        "sheet_name": "Q4",
+        "cell": "C17",
+        "value": "48250"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "The value must be the string '48250', not the number 48250 — a JSON type trap."
+}

@@ -1,0 +1,37 @@
+# Secrets — never commit credentials
+.env
+.env.*
+!.env.example
+*.pem
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Benchmark outputs (generated per run)
+outputs/*.json
+outputs/checkpoints/*.json
+reports/*.md
+!analysis/example_report.md
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Local-only files (not part of the published repo)
+.claude/settings.local.json
+instructions.txt

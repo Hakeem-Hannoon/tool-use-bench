@@ -1,0 +1,4928 @@
+{
+  "benchmark": "tool-call-bench",
+  "version": "0.1.0",
+  "sample_count": 67,
+  "samples": [
+    {
+      "id": "0001_weather_current",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "What is the current weather in Toronto, Canada? Use Celsius.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Toronto, Canada'."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Temperature unit.",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_weather",
+          "arguments": {
+            "location": "Toronto, Canada",
+            "unit": "celsius"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests whether the model calls the weather tool with the correct location and unit."
+    },
+    {
+      "id": "0002_calendar_search",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Find events on my calendar that match the keyword 'dentist'. Search all dates — do not add any date filters.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_calendar_events",
+            "description": "Search calendar events by keyword. Dates are optional filters.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Keyword to search event titles and descriptions."
+                },
+                "start_date": {
+                  "type": "string",
+                  "description": "Earliest date to include, format YYYY-MM-DD."
+                },
+                "end_date": {
+                  "type": "string",
+                  "description": "Latest date to include, format YYYY-MM-DD."
+                }
+              },
+              "required": [
+                "query"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_calendar_events",
+          "arguments": {
+            "query": "dentist"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests a single calendar search with only the required argument; adding optional date filters fails the run."
+    },
+    {
+      "id": "0003_current_time_tokyo",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "What time is it right now in Tokyo, Japan?",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_current_time",
+            "description": "Get the current time in a timezone.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+                }
+              },
+              "required": [
+                "timezone"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_current_time",
+          "arguments": {
+            "timezone": "Asia/Tokyo"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests mapping a city to its IANA timezone identifier."
+    },
+    {
+      "id": "0004_calculator_simple",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Use the calculator to compute 847*293. Pass the expression exactly as '847*293'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Arithmetic expression to evaluate, without spaces."
+                }
+              },
+              "required": [
+                "expression"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "calculator",
+          "arguments": {
+            "expression": "847*293"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests passing an arithmetic expression through verbatim instead of answering from arithmetic ability."
+    },
+    {
+      "id": "0005_currency_conversion",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Convert 250 US dollars to euros.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_currency",
+            "description": "Convert an amount between currencies using ISO 4217 codes.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number",
+                  "description": "Amount to convert, as a number."
+                },
+                "from_currency": {
+                  "type": "string",
+                  "description": "3-letter uppercase ISO currency code, e.g. 'USD'."
+                },
+                "to_currency": {
+                  "type": "string",
+                  "description": "3-letter uppercase ISO currency code, e.g. 'EUR'."
+                }
+              },
+              "required": [
+                "amount",
+                "from_currency",
+                "to_currency"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "convert_currency",
+          "arguments": {
+            "amount": 250,
+            "from_currency": "USD",
+            "to_currency": "EUR"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests numeric amount plus ISO currency code normalization."
+    },
+    {
+      "id": "0006_unit_conversion",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Convert 26.2 miles to kilometers.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert a value between measurement units. Unit names are lowercase plural words, e.g. 'miles', 'kilometers', 'fahrenheit', 'celsius'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number",
+                  "description": "Numeric value to convert."
+                },
+                "from_unit": {
+                  "type": "string",
+                  "description": "Source unit, lowercase."
+                },
+                "to_unit": {
+                  "type": "string",
+                  "description": "Target unit, lowercase."
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "convert_units",
+          "arguments": {
+            "value": 26.2,
+            "from_unit": "miles",
+            "to_unit": "kilometers"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests decimal value handling and lowercase unit names."
+    },
+    {
+      "id": "0007_web_search_basic",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Search the web for 'latest Mars rover discoveries' and return 5 results.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the web.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query."
+                },
+                "num_results": {
+                  "type": "integer",
+                  "description": "Number of results to return."
+                }
+              },
+              "required": [
+                "query",
+                "num_results"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "latest Mars rover discoveries",
+            "num_results": 5
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests a quoted query string plus an integer result count."
+    },
+    {
+      "id": "0008_contact_lookup",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Look up the contact record for Priya Sharma.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "lookup_contact",
+            "description": "Look up a contact record by full name.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Full name of the contact, e.g. 'Priya Sharma'."
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "lookup_contact",
+          "arguments": {
+            "name": "Priya Sharma"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests extracting a person's full name as the lookup key."
+    },
+    {
+      "id": "0009_email_search_unread",
+      "category": "single_tool",
+      "difficulty": "medium",
+      "prompt": "Search my inbox for unread emails matching 'invoice'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_emails",
+            "description": "Search email messages.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Keyword to search subject and body."
+                },
+                "folder": {
+                  "type": "string",
+                  "description": "Folder to search.",
+                  "enum": [
+                    "inbox",
+                    "sent",
+                    "archive",
+                    "all"
+                  ]
+                },
+                "unread_only": {
+                  "type": "boolean",
+                  "description": "If true, only return unread messages."
+                }
+              },
+              "required": [
+                "query",
+                "folder"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_emails",
+          "arguments": {
+            "query": "invoice",
+            "folder": "inbox",
+            "unread_only": true
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests mapping 'inbox' and 'unread' phrasing onto an enum folder and a boolean flag."
+    },
+    {
+      "id": "0010_file_search_pdf",
+      "category": "single_tool",
+      "difficulty": "medium",
+      "prompt": "Search my files for PDFs matching 'quarterly report'. Limit to 10 results.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "description": "Search files in cloud storage.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Keyword to search file names and contents."
+                },
+                "file_type": {
+                  "type": "string",
+                  "description": "File type filter.",
+                  "enum": [
+                    "pdf",
+                    "docx",
+                    "xlsx",
+                    "txt",
+                    "any"
+                  ]
+                },
+                "max_results": {
+                  "type": "integer",
+                  "description": "Optional maximum number of results."
+                }
+              },
+              "required": [
+                "query",
+                "file_type"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_files",
+          "arguments": {
+            "query": "quarterly report",
+            "file_type": "pdf",
+            "max_results": 10
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests an enum file type plus an optional integer limit that the prompt makes required."
+    },
+    {
+      "id": "0011_document_retrieval",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Fetch the document with ID DOC-2024-0117.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_document",
+            "description": "Retrieve a document by its exact document ID.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "document_id": {
+                  "type": "string",
+                  "description": "Document ID, e.g. 'DOC-2024-0117'."
+                }
+              },
+              "required": [
+                "document_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_document",
+          "arguments": {
+            "document_id": "DOC-2024-0117"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests copying an exact document ID."
+    },
+    {
+      "id": "0012_github_pr_lookup",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Show me pull request #482 in the acme/website repository.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_github_pull_request",
+            "description": "Fetch a GitHub pull request by number.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "repo": {
+                  "type": "string",
+                  "description": "Repository in 'owner/name' form."
+                },
+                "pr_number": {
+                  "type": "integer",
+                  "description": "Pull request number."
+                }
+              },
+              "required": [
+                "repo",
+                "pr_number"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_github_pull_request",
+          "arguments": {
+            "repo": "acme/website",
+            "pr_number": 482
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests an owner/name repo string and an integer PR number (not the string '#482')."
+    },
+    {
+      "id": "0013_slack_message",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Post exactly \"Deploy complete.\" to the #deployments Slack channel.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "send_slack_message",
+            "description": "Post a message to a Slack channel. Channel names start with '#'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel name including the leading '#', e.g. '#general'."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message text to post."
+                }
+              },
+              "required": [
+                "channel",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "send_slack_message",
+          "arguments": {
+            "channel": "#deployments",
+            "message": "Deploy complete."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests verbatim message text and a channel name with its '#'."
+    },
+    {
+      "id": "0014_reminder_creation",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Create a reminder titled 'Renew passport' due on 2026-08-15.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_reminder",
+            "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "What to be reminded about."
+                },
+                "due_date": {
+                  "type": "string",
+                  "description": "Due date, format YYYY-MM-DD."
+                },
+                "due_time": {
+                  "type": "string",
+                  "description": "Optional due time, 24-hour HH:MM."
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Optional additional notes."
+                }
+              },
+              "required": [
+                "title",
+                "due_date"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_reminder",
+          "arguments": {
+            "title": "Renew passport",
+            "due_date": "2026-08-15"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests a quoted title and an ISO due date with no extra optional arguments."
+    },
+    {
+      "id": "0015_geocode_address",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Geocode the address '1600 Pennsylvania Avenue NW, Washington, DC'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "geocode_address",
+            "description": "Convert a street address or place name into geographic coordinates.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "description": "Address or place name to geocode."
+                }
+              },
+              "required": [
+                "address"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "geocode_address",
+          "arguments": {
+            "address": "1600 Pennsylvania Avenue NW, Washington, DC"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests passing a multi-part street address through verbatim."
+    },
+    {
+      "id": "0016_restaurant_search",
+      "category": "single_tool",
+      "difficulty": "medium",
+      "prompt": "Find seafood restaurants in Lisbon, Portugal that are open right now.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_restaurants",
+            "description": "Find restaurants in a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City or neighborhood, e.g. 'Lisbon, Portugal'."
+                },
+                "cuisine": {
+                  "type": "string",
+                  "description": "Optional cuisine type, lowercase, e.g. 'seafood'."
+                },
+                "price_range": {
+                  "type": "string",
+                  "description": "Optional price tier.",
+                  "enum": [
+                    "$",
+                    "$$",
+                    "$$$",
+                    "$$$$"
+                  ]
+                },
+                "open_now": {
+                  "type": "boolean",
+                  "description": "If true, only restaurants open right now."
+                }
+              },
+              "required": [
+                "location"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_restaurants",
+          "arguments": {
+            "location": "Lisbon, Portugal",
+            "cuisine": "seafood",
+            "open_now": true
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests selecting the right optional arguments (cuisine, open_now) while leaving price_range out."
+    },
+    {
+      "id": "0017_database_query",
+      "category": "single_tool",
+      "difficulty": "medium",
+      "prompt": "Run this SQL against the 'sales' database: SELECT COUNT(*) FROM orders WHERE status = 'pending'",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "query_database",
+            "description": "Run a read-only SQL query against a named database.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "SQL query to execute, exactly as provided."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "Database name, e.g. 'sales'."
+                }
+              },
+              "required": [
+                "query",
+                "database"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "query_database",
+          "arguments": {
+            "query": "SELECT COUNT(*) FROM orders WHERE status = 'pending'",
+            "database": "sales"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests passing a SQL string through without rewriting it."
+    },
+    {
+      "id": "0018_code_execution",
+      "category": "single_tool",
+      "difficulty": "medium",
+      "prompt": "Run this Python code exactly as written: print(sum(range(1, 101)))",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "execute_code",
+            "description": "Execute a code snippet and return its output.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string",
+                  "description": "Programming language.",
+                  "enum": [
+                    "python",
+                    "javascript",
+                    "sql"
+                  ]
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Source code to execute, exactly as provided."
+                }
+              },
+              "required": [
+                "language",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "execute_code",
+          "arguments": {
+            "language": "python",
+            "code": "print(sum(range(1, 101)))"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests a language enum plus verbatim code, resisting the temptation to compute the answer directly."
+    },
+    {
+      "id": "0019_refund_lookup",
+      "category": "single_tool",
+      "difficulty": "easy",
+      "prompt": "Check the refund status for order ORD-88213.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "lookup_refund",
+            "description": "Look up the refund/payment status for an order.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "description": "Order ID, e.g. 'ORD-88213'."
+                }
+              },
+              "required": [
+                "order_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "lookup_refund",
+          "arguments": {
+            "order_id": "ORD-88213"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests copying an exact order ID."
+    },
+    {
+      "id": "0020_hotel_search",
+      "category": "single_tool",
+      "difficulty": "medium",
+      "prompt": "Find hotels in Barcelona, Spain for 2 guests, checking in 2026-09-04 and out 2026-09-08.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_hotels",
+            "description": "Search hotels in a location. Dates use YYYY-MM-DD.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Tokyo, Japan'."
+                },
+                "check_in": {
+                  "type": "string",
+                  "description": "Check-in date, format YYYY-MM-DD."
+                },
+                "check_out": {
+                  "type": "string",
+                  "description": "Check-out date, format YYYY-MM-DD."
+                },
+                "guests": {
+                  "type": "integer",
+                  "description": "Number of guests."
+                }
+              },
+              "required": [
+                "location",
+                "check_in",
+                "check_out",
+                "guests"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_hotels",
+          "arguments": {
+            "location": "Barcelona, Spain",
+            "check_in": "2026-09-04",
+            "check_out": "2026-09-08",
+            "guests": 2
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Tests four required arguments including two ISO dates and an integer guest count."
+    },
+    {
+      "id": "0021_event_and_reminder",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "Two tasks: (1) Create a calendar event titled 'Team offsite' on 2026-09-12 from 09:00 to 17:00. (2) Create a reminder titled 'Book offsite venue' due on 2026-08-29.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_calendar_event",
+            "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Event title."
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Event date, format YYYY-MM-DD."
+                },
+                "start_time": {
+                  "type": "string",
+                  "description": "Start time, 24-hour format HH:MM."
+                },
+                "end_time": {
+                  "type": "string",
+                  "description": "End time, 24-hour format HH:MM."
+                },
+                "location": {
+                  "type": "string",
+                  "description": "Optional event location."
+                },
+                "attendees": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional list of attendee email addresses."
+                }
+              },
+              "required": [
+                "title",
+                "date",
+                "start_time",
+                "end_time"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_reminder",
+            "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "What to be reminded about."
+                },
+                "due_date": {
+                  "type": "string",
+                  "description": "Due date, format YYYY-MM-DD."
+                },
+                "due_time": {
+                  "type": "string",
+                  "description": "Optional due time, 24-hour HH:MM."
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Optional additional notes."
+                }
+              },
+              "required": [
+                "title",
+                "due_date"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_calendar_event",
+          "arguments": {
+            "title": "Team offsite",
+            "date": "2026-09-12",
+            "start_time": "09:00",
+            "end_time": "17:00"
+          }
+        },
+        {
+          "name": "create_reminder",
+          "arguments": {
+            "title": "Book offsite venue",
+            "due_date": "2026-08-29"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Two different tools must both be called; order does not matter."
+    },
+    {
+      "id": "0022_email_search_and_draft",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "Search all my email folders (folder 'all') for messages matching 'contract renewal'. Also draft — but do not send — an email to legal@example.com with subject 'Contract renewal status' and body 'Please send an update on the renewal.'",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_emails",
+            "description": "Search email messages.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Keyword to search subject and body."
+                },
+                "folder": {
+                  "type": "string",
+                  "description": "Folder to search.",
+                  "enum": [
+                    "inbox",
+                    "sent",
+                    "archive",
+                    "all"
+                  ]
+                },
+                "unread_only": {
+                  "type": "boolean",
+                  "description": "If true, only return unread messages."
+                }
+              },
+              "required": [
+                "query",
+                "folder"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_email_draft",
+            "description": "Create an email draft WITHOUT sending it.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_email",
+            "description": "Send an email immediately.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_emails",
+          "arguments": {
+            "query": "contract renewal",
+            "folder": "all"
+          }
+        },
+        {
+          "name": "create_email_draft",
+          "arguments": {
+            "to": [
+              "legal@example.com"
+            ],
+            "subject": "Contract renewal status",
+            "body": "Please send an update on the renewal."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Requires a search plus a draft; calling send_email instead of create_email_draft fails the run."
+    },
+    {
+      "id": "0023_github_issue_and_slack",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "File a GitHub issue in acme/api titled 'Rate limiter returns 500 under load' with body 'Load tests above 200 rps trigger HTTP 500 responses from the rate limiter.' and the single label 'bug'. Also post exactly \"Filed the rate limiter issue.\" to the #eng-alerts channel.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_github_issue",
+            "description": "Create a GitHub issue in a repository.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "repo": {
+                  "type": "string",
+                  "description": "Repository in 'owner/name' form, e.g. 'acme/api'."
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Issue title."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Issue body text."
+                },
+                "labels": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional labels to apply, in order."
+                }
+              },
+              "required": [
+                "repo",
+                "title",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_slack_message",
+            "description": "Post a message to a Slack channel. Channel names start with '#'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel name including the leading '#', e.g. '#general'."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message text to post."
+                }
+              },
+              "required": [
+                "channel",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_github_issue",
+          "arguments": {
+            "repo": "acme/api",
+            "title": "Rate limiter returns 500 under load",
+            "body": "Load tests above 200 rps trigger HTTP 500 responses from the rate limiter.",
+            "labels": [
+              "bug"
+            ]
+          }
+        },
+        {
+          "name": "send_slack_message",
+          "arguments": {
+            "channel": "#eng-alerts",
+            "message": "Filed the rate limiter issue."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "An issue plus a notification; both quoted texts must be verbatim."
+    },
+    {
+      "id": "0024_crm_and_ticket",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "Update CRM contact C-4491: set the field 'status' to the value 'churn_risk'. Also open a support ticket with subject 'Repeated login failures', description 'Customer C-4491 reports login failures since the last release.', and high priority.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "update_crm_contact",
+            "description": "Update one field of a CRM contact record.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "contact_id": {
+                  "type": "string",
+                  "description": "CRM contact ID, e.g. 'C-4491'."
+                },
+                "field": {
+                  "type": "string",
+                  "description": "Field name to update, e.g. 'status'."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "New value for the field."
+                }
+              },
+              "required": [
+                "contact_id",
+                "field",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_support_ticket",
+            "description": "Create a customer support ticket.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "description": "Short ticket subject."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Full description of the problem."
+                },
+                "priority": {
+                  "type": "string",
+                  "description": "Ticket priority.",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "urgent"
+                  ]
+                },
+                "customer_email": {
+                  "type": "string",
+                  "description": "Optional customer email address."
+                }
+              },
+              "required": [
+                "subject",
+                "description",
+                "priority"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "update_crm_contact",
+          "arguments": {
+            "contact_id": "C-4491",
+            "field": "status",
+            "value": "churn_risk"
+          }
+        },
+        {
+          "name": "create_support_ticket",
+          "arguments": {
+            "subject": "Repeated login failures",
+            "description": "Customer C-4491 reports login failures since the last release.",
+            "priority": "high"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A CRM field update plus ticket creation with an enum priority."
+    },
+    {
+      "id": "0025_flight_and_hotel",
+      "category": "multi_tool",
+      "difficulty": "hard",
+      "prompt": "Plan my Tokyo trip: search round-trip flights for 2 passengers from SFO to NRT departing 2026-10-02 and returning 2026-10-16, and search hotels in Tokyo, Japan for 2 guests checking in 2026-10-02 and out 2026-10-16.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_flights",
+            "description": "Search flights between airports. Airports use 3-letter uppercase IATA codes. Dates use YYYY-MM-DD.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "description": "Origin airport IATA code, e.g. 'SFO'."
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "Destination airport IATA code, e.g. 'NRT'."
+                },
+                "departure_date": {
+                  "type": "string",
+                  "description": "Departure date, format YYYY-MM-DD."
+                },
+                "return_date": {
+                  "type": "string",
+                  "description": "Optional return date for round trips, YYYY-MM-DD."
+                },
+                "passengers": {
+                  "type": "integer",
+                  "description": "Number of passengers."
+                }
+              },
+              "required": [
+                "origin",
+                "destination",
+                "departure_date",
+                "passengers"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search_hotels",
+            "description": "Search hotels in a location. Dates use YYYY-MM-DD.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Tokyo, Japan'."
+                },
+                "check_in": {
+                  "type": "string",
+                  "description": "Check-in date, format YYYY-MM-DD."
+                },
+                "check_out": {
+                  "type": "string",
+                  "description": "Check-out date, format YYYY-MM-DD."
+                },
+                "guests": {
+                  "type": "integer",
+                  "description": "Number of guests."
+                }
+              },
+              "required": [
+                "location",
+                "check_in",
+                "check_out",
+                "guests"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_flights",
+          "arguments": {
+            "origin": "SFO",
+            "destination": "NRT",
+            "departure_date": "2026-10-02",
+            "return_date": "2026-10-16",
+            "passengers": 2
+          }
+        },
+        {
+          "name": "search_hotels",
+          "arguments": {
+            "location": "Tokyo, Japan",
+            "check_in": "2026-10-02",
+            "check_out": "2026-10-16",
+            "guests": 2
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Nine precise arguments across two travel tools."
+    },
+    {
+      "id": "0026_geocode_and_weather",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "Geocode the address '221B Baker Street, London' and get the current weather in 'London, UK' in celsius.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "geocode_address",
+            "description": "Convert a street address or place name into geographic coordinates.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "description": "Address or place name to geocode."
+                }
+              },
+              "required": [
+                "address"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Toronto, Canada'."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Temperature unit.",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "geocode_address",
+          "arguments": {
+            "address": "221B Baker Street, London"
+          }
+        },
+        {
+          "name": "get_weather",
+          "arguments": {
+            "location": "London, UK",
+            "unit": "celsius"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Two independent location tools with distinct location strings."
+    },
+    {
+      "id": "0027_db_and_spreadsheet",
+      "category": "multi_tool",
+      "difficulty": "hard",
+      "prompt": "Run this SQL against the 'analytics' database: SELECT region, SUM(revenue) FROM sales_2025 GROUP BY region — and set cell B2 of the 'Summary' sheet in spreadsheet SS-778 to the text 'refresh scheduled'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "query_database",
+            "description": "Run a read-only SQL query against a named database.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "SQL query to execute, exactly as provided."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "Database name, e.g. 'sales'."
+                }
+              },
+              "required": [
+                "query",
+                "database"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "update_spreadsheet_cell",
+            "description": "Set the value of a single spreadsheet cell.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "spreadsheet_id": {
+                  "type": "string",
+                  "description": "Spreadsheet ID, e.g. 'SS-778'."
+                },
+                "sheet_name": {
+                  "type": "string",
+                  "description": "Name of the sheet tab."
+                },
+                "cell": {
+                  "type": "string",
+                  "description": "Cell reference in A1 notation, e.g. 'B2'."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "New cell value, as text."
+                }
+              },
+              "required": [
+                "spreadsheet_id",
+                "sheet_name",
+                "cell",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "query_database",
+          "arguments": {
+            "query": "SELECT region, SUM(revenue) FROM sales_2025 GROUP BY region",
+            "database": "analytics"
+          }
+        },
+        {
+          "name": "update_spreadsheet_cell",
+          "arguments": {
+            "spreadsheet_id": "SS-778",
+            "sheet_name": "Summary",
+            "cell": "B2",
+            "value": "refresh scheduled"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A verbatim SQL string plus a four-argument spreadsheet update."
+    },
+    {
+      "id": "0028_time_and_event",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "Check the current time in the 'Europe/Paris' timezone, and create a calendar event titled 'Paris standup' on 2026-07-10 from 09:30 to 09:45.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_current_time",
+            "description": "Get the current time in a timezone.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+                }
+              },
+              "required": [
+                "timezone"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_calendar_event",
+            "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Event title."
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Event date, format YYYY-MM-DD."
+                },
+                "start_time": {
+                  "type": "string",
+                  "description": "Start time, 24-hour format HH:MM."
+                },
+                "end_time": {
+                  "type": "string",
+                  "description": "End time, 24-hour format HH:MM."
+                },
+                "location": {
+                  "type": "string",
+                  "description": "Optional event location."
+                },
+                "attendees": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional list of attendee email addresses."
+                }
+              },
+              "required": [
+                "title",
+                "date",
+                "start_time",
+                "end_time"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_current_time",
+          "arguments": {
+            "timezone": "Europe/Paris"
+          }
+        },
+        {
+          "name": "create_calendar_event",
+          "arguments": {
+            "title": "Paris standup",
+            "date": "2026-07-10",
+            "start_time": "09:30",
+            "end_time": "09:45"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A read-only lookup plus an event creation in one turn."
+    },
+    {
+      "id": "0029_files_and_document",
+      "category": "multi_tool",
+      "difficulty": "medium",
+      "prompt": "Search my files for Word documents (docx) matching 'onboarding checklist', and also fetch the document with ID DOC-ONBOARD-01.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "description": "Search files in cloud storage.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Keyword to search file names and contents."
+                },
+                "file_type": {
+                  "type": "string",
+                  "description": "File type filter.",
+                  "enum": [
+                    "pdf",
+                    "docx",
+                    "xlsx",
+                    "txt",
+                    "any"
+                  ]
+                },
+                "max_results": {
+                  "type": "integer",
+                  "description": "Optional maximum number of results."
+                }
+              },
+              "required": [
+                "query",
+                "file_type"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_document",
+            "description": "Retrieve a document by its exact document ID.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "document_id": {
+                  "type": "string",
+                  "description": "Document ID, e.g. 'DOC-2024-0117'."
+                }
+              },
+              "required": [
+                "document_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_files",
+          "arguments": {
+            "query": "onboarding checklist",
+            "file_type": "docx"
+          }
+        },
+        {
+          "name": "get_document",
+          "arguments": {
+            "document_id": "DOC-ONBOARD-01"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A filtered file search plus a direct document fetch."
+    },
+    {
+      "id": "0030_weather_three_cities",
+      "category": "parallel_tools",
+      "difficulty": "easy",
+      "prompt": "Get the current weather, in celsius, for each of these three cities: 'Toronto, Canada', 'Berlin, Germany', and 'Sydney, Australia'. Make one weather call per city.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Toronto, Canada'."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Temperature unit.",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_weather",
+          "arguments": {
+            "location": "Toronto, Canada",
+            "unit": "celsius"
+          }
+        },
+        {
+          "name": "get_weather",
+          "arguments": {
+            "location": "Berlin, Germany",
+            "unit": "celsius"
+          }
+        },
+        {
+          "name": "get_weather",
+          "arguments": {
+            "location": "Sydney, Australia",
+            "unit": "celsius"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Three independent calls to the same tool, any order."
+    },
+    {
+      "id": "0031_currency_three_targets",
+      "category": "parallel_tools",
+      "difficulty": "medium",
+      "prompt": "Convert 100 USD into each of EUR, GBP, and JPY — one conversion call per target currency.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_currency",
+            "description": "Convert an amount between currencies using ISO 4217 codes.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number",
+                  "description": "Amount to convert, as a number."
+                },
+                "from_currency": {
+                  "type": "string",
+                  "description": "3-letter uppercase ISO currency code, e.g. 'USD'."
+                },
+                "to_currency": {
+                  "type": "string",
+                  "description": "3-letter uppercase ISO currency code, e.g. 'EUR'."
+                }
+              },
+              "required": [
+                "amount",
+                "from_currency",
+                "to_currency"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "convert_currency",
+          "arguments": {
+            "amount": 100,
+            "from_currency": "USD",
+            "to_currency": "EUR"
+          }
+        },
+        {
+          "name": "convert_currency",
+          "arguments": {
+            "amount": 100,
+            "from_currency": "USD",
+            "to_currency": "GBP"
+          }
+        },
+        {
+          "name": "convert_currency",
+          "arguments": {
+            "amount": 100,
+            "from_currency": "USD",
+            "to_currency": "JPY"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Fan-out over target currencies with a shared amount and source."
+    },
+    {
+      "id": "0032_time_three_zones",
+      "category": "parallel_tools",
+      "difficulty": "easy",
+      "prompt": "Get the current time in each of these timezones: 'America/New_York', 'Europe/London', and 'Asia/Singapore'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_current_time",
+            "description": "Get the current time in a timezone.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+                }
+              },
+              "required": [
+                "timezone"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_current_time",
+          "arguments": {
+            "timezone": "America/New_York"
+          }
+        },
+        {
+          "name": "get_current_time",
+          "arguments": {
+            "timezone": "Europe/London"
+          }
+        },
+        {
+          "name": "get_current_time",
+          "arguments": {
+            "timezone": "Asia/Singapore"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Three parallel time lookups with explicit IANA zones."
+    },
+    {
+      "id": "0033_geocode_two_addresses",
+      "category": "parallel_tools",
+      "difficulty": "medium",
+      "prompt": "Geocode both of these addresses, one call each: 'Piazza San Marco, Venice, Italy' and 'Alexanderplatz, Berlin, Germany'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "geocode_address",
+            "description": "Convert a street address or place name into geographic coordinates.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "description": "Address or place name to geocode."
+                }
+              },
+              "required": [
+                "address"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "geocode_address",
+          "arguments": {
+            "address": "Piazza San Marco, Venice, Italy"
+          }
+        },
+        {
+          "name": "geocode_address",
+          "arguments": {
+            "address": "Alexanderplatz, Berlin, Germany"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Two verbatim addresses, one call per address."
+    },
+    {
+      "id": "0034_web_search_two_topics",
+      "category": "parallel_tools",
+      "difficulty": "medium",
+      "prompt": "Run two web searches with 3 results each: one for 'electric vehicle battery recycling' and one for 'solid state battery breakthrough'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the web.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query."
+                },
+                "num_results": {
+                  "type": "integer",
+                  "description": "Number of results to return."
+                }
+              },
+              "required": [
+                "query",
+                "num_results"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "electric vehicle battery recycling",
+            "num_results": 3
+          }
+        },
+        {
+          "name": "web_search",
+          "arguments": {
+            "query": "solid state battery breakthrough",
+            "num_results": 3
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Two searches sharing a result count; queries must be verbatim."
+    },
+    {
+      "id": "0035_github_three_prs",
+      "category": "parallel_tools",
+      "difficulty": "medium",
+      "prompt": "Fetch pull requests #101, #102, and #103 from the acme/mobile repository — one call per pull request.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_github_pull_request",
+            "description": "Fetch a GitHub pull request by number.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "repo": {
+                  "type": "string",
+                  "description": "Repository in 'owner/name' form."
+                },
+                "pr_number": {
+                  "type": "integer",
+                  "description": "Pull request number."
+                }
+              },
+              "required": [
+                "repo",
+                "pr_number"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_github_pull_request",
+          "arguments": {
+            "repo": "acme/mobile",
+            "pr_number": 101
+          }
+        },
+        {
+          "name": "get_github_pull_request",
+          "arguments": {
+            "repo": "acme/mobile",
+            "pr_number": 102
+          }
+        },
+        {
+          "name": "get_github_pull_request",
+          "arguments": {
+            "repo": "acme/mobile",
+            "pr_number": 103
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Batch lookup of three PR numbers as integers."
+    },
+    {
+      "id": "0036_flights_two_routes",
+      "category": "parallel_tools",
+      "difficulty": "hard",
+      "prompt": "Compare one-way options for 1 passenger on 2026-11-20: search JFK to LHR, and separately search EWR to LHR. Two searches, no return date.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_flights",
+            "description": "Search flights between airports. Airports use 3-letter uppercase IATA codes. Dates use YYYY-MM-DD.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "description": "Origin airport IATA code, e.g. 'SFO'."
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "Destination airport IATA code, e.g. 'NRT'."
+                },
+                "departure_date": {
+                  "type": "string",
+                  "description": "Departure date, format YYYY-MM-DD."
+                },
+                "return_date": {
+                  "type": "string",
+                  "description": "Optional return date for round trips, YYYY-MM-DD."
+                },
+                "passengers": {
+                  "type": "integer",
+                  "description": "Number of passengers."
+                }
+              },
+              "required": [
+                "origin",
+                "destination",
+                "departure_date",
+                "passengers"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_flights",
+          "arguments": {
+            "origin": "JFK",
+            "destination": "LHR",
+            "departure_date": "2026-11-20",
+            "passengers": 1
+          }
+        },
+        {
+          "name": "search_flights",
+          "arguments": {
+            "origin": "EWR",
+            "destination": "LHR",
+            "departure_date": "2026-11-20",
+            "passengers": 1
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Two one-way searches; adding a return_date is an argument error."
+    },
+    {
+      "id": "0037_refunds_batch",
+      "category": "parallel_tools",
+      "difficulty": "medium",
+      "prompt": "Check the refund status for each of these orders: ORD-10001, ORD-10002, and ORD-10003.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "lookup_refund",
+            "description": "Look up the refund/payment status for an order.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "description": "Order ID, e.g. 'ORD-88213'."
+                }
+              },
+              "required": [
+                "order_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "lookup_refund",
+          "arguments": {
+            "order_id": "ORD-10001"
+          }
+        },
+        {
+          "name": "lookup_refund",
+          "arguments": {
+            "order_id": "ORD-10002"
+          }
+        },
+        {
+          "name": "lookup_refund",
+          "arguments": {
+            "order_id": "ORD-10003"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "One lookup per order ID."
+    },
+    {
+      "id": "0038_general_knowledge_capital",
+      "category": "no_tool_decoy",
+      "difficulty": "easy",
+      "prompt": "What is the capital of Australia?",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the web.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query."
+                },
+                "num_results": {
+                  "type": "integer",
+                  "description": "Number of results to return."
+                }
+              },
+              "required": [
+                "query",
+                "num_results"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Stable general knowledge; searching the web is an unnecessary tool call and fails the run."
+    },
+    {
+      "id": "0039_trivial_arithmetic",
+      "category": "no_tool_decoy",
+      "difficulty": "medium",
+      "prompt": "What is 2 + 2?",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Arithmetic expression to evaluate, without spaces."
+                }
+              },
+              "required": [
+                "expression"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Trivial arithmetic with a calculator dangled as bait."
+    },
+    {
+      "id": "0040_gratitude_message",
+      "category": "no_tool_decoy",
+      "difficulty": "easy",
+      "prompt": "Thanks so much for your help earlier — everything works now!",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "send_slack_message",
+            "description": "Post a message to a Slack channel. Channel names start with '#'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel name including the leading '#', e.g. '#general'."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message text to post."
+                }
+              },
+              "required": [
+                "channel",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_email",
+            "description": "Send an email immediately.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Pure conversational gratitude; no action was requested."
+    },
+    {
+      "id": "0041_opinion_question",
+      "category": "no_tool_decoy",
+      "difficulty": "easy",
+      "prompt": "In your opinion, what makes code easy to read?",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the web.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query."
+                },
+                "num_results": {
+                  "type": "integer",
+                  "description": "Number of results to return."
+                }
+              },
+              "required": [
+                "query",
+                "num_results"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "query_database",
+            "description": "Run a read-only SQL query against a named database.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "SQL query to execute, exactly as provided."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "Database name, e.g. 'sales'."
+                }
+              },
+              "required": [
+                "query",
+                "database"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "An opinion question that neither search nor a database can answer."
+    },
+    {
+      "id": "0042_info_already_given",
+      "category": "no_tool_decoy",
+      "difficulty": "medium",
+      "prompt": "It's currently 22°C and sunny in Madrid. Should I bring a jacket for an evening walk?",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Toronto, Canada'."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Temperature unit.",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "The weather is already stated in the prompt; calling the weather tool anyway fails the run."
+    },
+    {
+      "id": "0043_hypothetical_flight",
+      "category": "no_tool_decoy",
+      "difficulty": "medium",
+      "prompt": "Roughly how long is a nonstop flight from New York to London? No need to search — a ballpark figure is fine.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_flights",
+            "description": "Search flights between airports. Airports use 3-letter uppercase IATA codes. Dates use YYYY-MM-DD.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "description": "Origin airport IATA code, e.g. 'SFO'."
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "Destination airport IATA code, e.g. 'NRT'."
+                },
+                "departure_date": {
+                  "type": "string",
+                  "description": "Departure date, format YYYY-MM-DD."
+                },
+                "return_date": {
+                  "type": "string",
+                  "description": "Optional return date for round trips, YYYY-MM-DD."
+                },
+                "passengers": {
+                  "type": "integer",
+                  "description": "Number of passengers."
+                }
+              },
+              "required": [
+                "origin",
+                "destination",
+                "departure_date",
+                "passengers"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "The user explicitly declines a search; a flight search anyway fails the run."
+    },
+    {
+      "id": "0044_acronym_definition",
+      "category": "no_tool_decoy",
+      "difficulty": "easy",
+      "prompt": "What does the acronym 'API' stand for?",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the web.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query."
+                },
+                "num_results": {
+                  "type": "integer",
+                  "description": "Number of results to return."
+                }
+              },
+              "required": [
+                "query",
+                "num_results"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_document",
+            "description": "Retrieve a document by its exact document ID.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "document_id": {
+                  "type": "string",
+                  "description": "Document ID, e.g. 'DOC-2024-0117'."
+                }
+              },
+              "required": [
+                "document_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A definition every model knows; both offered tools are decoys."
+    },
+    {
+      "id": "0045_creative_writing",
+      "category": "no_tool_decoy",
+      "difficulty": "medium",
+      "prompt": "Write me a haiku about autumn leaves.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "execute_code",
+            "description": "Execute a code snippet and return its output.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string",
+                  "description": "Programming language.",
+                  "enum": [
+                    "python",
+                    "javascript",
+                    "sql"
+                  ]
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Source code to execute, exactly as provided."
+                }
+              },
+              "required": [
+                "language",
+                "code"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Arithmetic expression to evaluate, without spaces."
+                }
+              },
+              "required": [
+                "expression"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Creative writing with irrelevant technical tools offered."
+    },
+    {
+      "id": "0046_email_exact_recipients",
+      "category": "argument_precision",
+      "difficulty": "medium",
+      "prompt": "Send an email to alice.chen@example.com and raj.patel@example.com with subject 'Q3 planning follow-up' and body 'Slides are attached in the shared drive.'",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "send_email",
+            "description": "Send an email immediately.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "send_email",
+          "arguments": {
+            "to": [
+              "alice.chen@example.com",
+              "raj.patel@example.com"
+            ],
+            "subject": "Q3 planning follow-up",
+            "body": "Slides are attached in the shared drive."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Both recipients must appear, in the order given, with verbatim subject and body."
+    },
+    {
+      "id": "0047_event_datetime_conversion",
+      "category": "argument_precision",
+      "difficulty": "hard",
+      "prompt": "Book a calendar event titled 'Dentist appointment' on November 3, 2026 from 2:30pm to 3:15pm.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_calendar_event",
+            "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Event title."
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Event date, format YYYY-MM-DD."
+                },
+                "start_time": {
+                  "type": "string",
+                  "description": "Start time, 24-hour format HH:MM."
+                },
+                "end_time": {
+                  "type": "string",
+                  "description": "End time, 24-hour format HH:MM."
+                },
+                "location": {
+                  "type": "string",
+                  "description": "Optional event location."
+                },
+                "attendees": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional list of attendee email addresses."
+                }
+              },
+              "required": [
+                "title",
+                "date",
+                "start_time",
+                "end_time"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_calendar_event",
+          "arguments": {
+            "title": "Dentist appointment",
+            "date": "2026-11-03",
+            "start_time": "14:30",
+            "end_time": "15:15"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Natural-language date and 12-hour times must be converted to the YYYY-MM-DD and 24-hour HH:MM formats the schema requires."
+    },
+    {
+      "id": "0048_spreadsheet_text_value",
+      "category": "argument_precision",
+      "difficulty": "medium",
+      "prompt": "In spreadsheet SS-2026-BUDGET, on the 'Q4' sheet, set cell C17 to the text value '48250'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "update_spreadsheet_cell",
+            "description": "Set the value of a single spreadsheet cell.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "spreadsheet_id": {
+                  "type": "string",
+                  "description": "Spreadsheet ID, e.g. 'SS-778'."
+                },
+                "sheet_name": {
+                  "type": "string",
+                  "description": "Name of the sheet tab."
+                },
+                "cell": {
+                  "type": "string",
+                  "description": "Cell reference in A1 notation, e.g. 'B2'."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "New cell value, as text."
+                }
+              },
+              "required": [
+                "spreadsheet_id",
+                "sheet_name",
+                "cell",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "update_spreadsheet_cell",
+          "arguments": {
+            "spreadsheet_id": "SS-2026-BUDGET",
+            "sheet_name": "Q4",
+            "cell": "C17",
+            "value": "48250"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "The value must be the string '48250', not the number 48250 — a JSON type trap."
+    },
+    {
+      "id": "0049_ticket_priority_enum",
+      "category": "argument_precision",
+      "difficulty": "medium",
+      "prompt": "Open an urgent support ticket for sam.lee@example.com. Subject: 'Cannot access account'. Description: 'User reports 2FA codes are never delivered.'",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_support_ticket",
+            "description": "Create a customer support ticket.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "description": "Short ticket subject."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Full description of the problem."
+                },
+                "priority": {
+                  "type": "string",
+                  "description": "Ticket priority.",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "urgent"
+                  ]
+                },
+                "customer_email": {
+                  "type": "string",
+                  "description": "Optional customer email address."
+                }
+              },
+              "required": [
+                "subject",
+                "description",
+                "priority"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_support_ticket",
+          "arguments": {
+            "subject": "Cannot access account",
+            "description": "User reports 2FA codes are never delivered.",
+            "priority": "urgent",
+            "customer_email": "sam.lee@example.com"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "The word 'urgent' must map to the exact enum value, and the optional customer_email must be included."
+    },
+    {
+      "id": "0050_currency_decimal_amount",
+      "category": "argument_precision",
+      "difficulty": "medium",
+      "prompt": "Convert 1,499.99 Canadian dollars to US dollars.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_currency",
+            "description": "Convert an amount between currencies using ISO 4217 codes.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "number",
+                  "description": "Amount to convert, as a number."
+                },
+                "from_currency": {
+                  "type": "string",
+                  "description": "3-letter uppercase ISO currency code, e.g. 'USD'."
+                },
+                "to_currency": {
+                  "type": "string",
+                  "description": "3-letter uppercase ISO currency code, e.g. 'EUR'."
+                }
+              },
+              "required": [
+                "amount",
+                "from_currency",
+                "to_currency"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "convert_currency",
+          "arguments": {
+            "amount": 1499.99,
+            "from_currency": "CAD",
+            "to_currency": "USD"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A thousands separator must not survive into the numeric amount; currency names map to ISO codes."
+    },
+    {
+      "id": "0051_github_labels_order",
+      "category": "argument_precision",
+      "difficulty": "hard",
+      "prompt": "Create an issue in acme/mobile-app titled 'Crash on launch when offline' with body 'App crashes on cold start when the device has no connectivity.' Apply these labels in this exact order: bug, ios, p1.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_github_issue",
+            "description": "Create a GitHub issue in a repository.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "repo": {
+                  "type": "string",
+                  "description": "Repository in 'owner/name' form, e.g. 'acme/api'."
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Issue title."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Issue body text."
+                },
+                "labels": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional labels to apply, in order."
+                }
+              },
+              "required": [
+                "repo",
+                "title",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_github_issue",
+          "arguments": {
+            "repo": "acme/mobile-app",
+            "title": "Crash on launch when offline",
+            "body": "App crashes on cold start when the device has no connectivity.",
+            "labels": [
+              "bug",
+              "ios",
+              "p1"
+            ]
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "An ordered array argument: the labels list must match element-for-element in order."
+    },
+    {
+      "id": "0052_flight_iata_codes",
+      "category": "argument_precision",
+      "difficulty": "hard",
+      "prompt": "Search flights for just me from Toronto Pearson to Paris Charles de Gaulle, departing 2026-12-19 and returning 2027-01-04. Use IATA airport codes.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_flights",
+            "description": "Search flights between airports. Airports use 3-letter uppercase IATA codes. Dates use YYYY-MM-DD.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "origin": {
+                  "type": "string",
+                  "description": "Origin airport IATA code, e.g. 'SFO'."
+                },
+                "destination": {
+                  "type": "string",
+                  "description": "Destination airport IATA code, e.g. 'NRT'."
+                },
+                "departure_date": {
+                  "type": "string",
+                  "description": "Departure date, format YYYY-MM-DD."
+                },
+                "return_date": {
+                  "type": "string",
+                  "description": "Optional return date for round trips, YYYY-MM-DD."
+                },
+                "passengers": {
+                  "type": "integer",
+                  "description": "Number of passengers."
+                }
+              },
+              "required": [
+                "origin",
+                "destination",
+                "departure_date",
+                "passengers"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_flights",
+          "arguments": {
+            "origin": "YYZ",
+            "destination": "CDG",
+            "departure_date": "2026-12-19",
+            "return_date": "2027-01-04",
+            "passengers": 1
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Airport names must become IATA codes and 'just me' must become passengers=1."
+    },
+    {
+      "id": "0053_unit_exact_names",
+      "category": "argument_precision",
+      "difficulty": "medium",
+      "prompt": "Convert 98.6 degrees Fahrenheit to Celsius.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert a value between measurement units. Unit names are lowercase plural words, e.g. 'miles', 'kilometers', 'fahrenheit', 'celsius'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number",
+                  "description": "Numeric value to convert."
+                },
+                "from_unit": {
+                  "type": "string",
+                  "description": "Source unit, lowercase."
+                },
+                "to_unit": {
+                  "type": "string",
+                  "description": "Target unit, lowercase."
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "convert_units",
+          "arguments": {
+            "value": 98.6,
+            "from_unit": "fahrenheit",
+            "to_unit": "celsius"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Unit names must be lowercased exactly as the schema describes."
+    },
+    {
+      "id": "0054_sql_exact_string",
+      "category": "argument_precision",
+      "difficulty": "hard",
+      "prompt": "Run exactly this query against the 'customers_prod' database: SELECT id, email FROM customers WHERE created_at >= '2026-01-01' ORDER BY created_at DESC LIMIT 50",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "query_database",
+            "description": "Run a read-only SQL query against a named database.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "SQL query to execute, exactly as provided."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "Database name, e.g. 'sales'."
+                }
+              },
+              "required": [
+                "query",
+                "database"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "query_database",
+          "arguments": {
+            "query": "SELECT id, email FROM customers WHERE created_at >= '2026-01-01' ORDER BY created_at DESC LIMIT 50",
+            "database": "customers_prod"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A long SQL string with embedded quotes must pass through byte-for-byte."
+    },
+    {
+      "id": "0055_nested_event_update",
+      "category": "argument_precision",
+      "difficulty": "hard",
+      "prompt": "Move event EVT-3391 to 2026-08-07 with a new start time of 10:00. Change nothing else.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "update_calendar_event",
+            "description": "Update fields of an existing calendar event. Only include fields being changed. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "description": "ID of the event to update, e.g. 'EVT-1234'."
+                },
+                "changes": {
+                  "type": "object",
+                  "description": "Fields to change.",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "New title."
+                    },
+                    "date": {
+                      "type": "string",
+                      "description": "New date, format YYYY-MM-DD."
+                    },
+                    "start_time": {
+                      "type": "string",
+                      "description": "New start time, 24-hour HH:MM."
+                    },
+                    "end_time": {
+                      "type": "string",
+                      "description": "New end time, 24-hour HH:MM."
+                    },
+                    "location": {
+                      "type": "string",
+                      "description": "New location."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "event_id",
+                "changes"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "update_calendar_event",
+          "arguments": {
+            "event_id": "EVT-3391",
+            "changes": {
+              "date": "2026-08-07",
+              "start_time": "10:00"
+            }
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A nested object argument must contain exactly two keys — adding or omitting fields inside 'changes' fails the run."
+    },
+    {
+      "id": "0056_lookup_then_notify",
+      "category": "ordering_required",
+      "difficulty": "medium",
+      "prompt": "First look up the contact record for Ana Silva. Then post exactly \"Reached out to Ana\" in the #sales channel. Do it in that order.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "lookup_contact",
+            "description": "Look up a contact record by full name.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Full name of the contact, e.g. 'Priya Sharma'."
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_slack_message",
+            "description": "Post a message to a Slack channel. Channel names start with '#'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel name including the leading '#', e.g. '#general'."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message text to post."
+                }
+              },
+              "required": [
+                "channel",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "lookup_contact",
+          "arguments": {
+            "name": "Ana Silva"
+          }
+        },
+        {
+          "name": "send_slack_message",
+          "arguments": {
+            "channel": "#sales",
+            "message": "Reached out to Ana"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "The lookup must come before the notification."
+    },
+    {
+      "id": "0057_query_then_record",
+      "category": "ordering_required",
+      "difficulty": "hard",
+      "prompt": "In this exact order: first run the query SELECT COUNT(*) FROM signups WHERE plan = 'pro' against the 'growth' database, then set cell D4 on the 'Metrics' sheet of spreadsheet SS-METRICS-26 to the text 'exported'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "query_database",
+            "description": "Run a read-only SQL query against a named database.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "SQL query to execute, exactly as provided."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "Database name, e.g. 'sales'."
+                }
+              },
+              "required": [
+                "query",
+                "database"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "update_spreadsheet_cell",
+            "description": "Set the value of a single spreadsheet cell.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "spreadsheet_id": {
+                  "type": "string",
+                  "description": "Spreadsheet ID, e.g. 'SS-778'."
+                },
+                "sheet_name": {
+                  "type": "string",
+                  "description": "Name of the sheet tab."
+                },
+                "cell": {
+                  "type": "string",
+                  "description": "Cell reference in A1 notation, e.g. 'B2'."
+                },
+                "value": {
+                  "type": "string",
+                  "description": "New cell value, as text."
+                }
+              },
+              "required": [
+                "spreadsheet_id",
+                "sheet_name",
+                "cell",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "query_database",
+          "arguments": {
+            "query": "SELECT COUNT(*) FROM signups WHERE plan = 'pro'",
+            "database": "growth"
+          }
+        },
+        {
+          "name": "update_spreadsheet_cell",
+          "arguments": {
+            "spreadsheet_id": "SS-METRICS-26",
+            "sheet_name": "Metrics",
+            "cell": "D4",
+            "value": "exported"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Export happens only after the query; reversed order fails."
+    },
+    {
+      "id": "0058_geocode_then_restaurants",
+      "category": "ordering_required",
+      "difficulty": "medium",
+      "prompt": "First geocode 'Shibuya Crossing, Tokyo', then search for ramen restaurants in 'Shibuya, Tokyo'. Keep that order.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "geocode_address",
+            "description": "Convert a street address or place name into geographic coordinates.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "description": "Address or place name to geocode."
+                }
+              },
+              "required": [
+                "address"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search_restaurants",
+            "description": "Find restaurants in a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City or neighborhood, e.g. 'Lisbon, Portugal'."
+                },
+                "cuisine": {
+                  "type": "string",
+                  "description": "Optional cuisine type, lowercase, e.g. 'seafood'."
+                },
+                "price_range": {
+                  "type": "string",
+                  "description": "Optional price tier.",
+                  "enum": [
+                    "$",
+                    "$$",
+                    "$$$",
+                    "$$$$"
+                  ]
+                },
+                "open_now": {
+                  "type": "boolean",
+                  "description": "If true, only restaurants open right now."
+                }
+              },
+              "required": [
+                "location"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "geocode_address",
+          "arguments": {
+            "address": "Shibuya Crossing, Tokyo"
+          }
+        },
+        {
+          "name": "search_restaurants",
+          "arguments": {
+            "location": "Shibuya, Tokyo",
+            "cuisine": "ramen"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Locate first, then search nearby restaurants."
+    },
+    {
+      "id": "0059_time_then_reminder",
+      "category": "ordering_required",
+      "difficulty": "medium",
+      "prompt": "First check the current time in 'America/Los_Angeles', then create a reminder titled 'Submit expense report' due 2026-07-31. In that order.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_current_time",
+            "description": "Get the current time in a timezone.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string",
+                  "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+                }
+              },
+              "required": [
+                "timezone"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_reminder",
+            "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "What to be reminded about."
+                },
+                "due_date": {
+                  "type": "string",
+                  "description": "Due date, format YYYY-MM-DD."
+                },
+                "due_time": {
+                  "type": "string",
+                  "description": "Optional due time, 24-hour HH:MM."
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Optional additional notes."
+                }
+              },
+              "required": [
+                "title",
+                "due_date"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_current_time",
+          "arguments": {
+            "timezone": "America/Los_Angeles"
+          }
+        },
+        {
+          "name": "create_reminder",
+          "arguments": {
+            "title": "Submit expense report",
+            "due_date": "2026-07-31"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A read-then-write sequence that must not be reordered."
+    },
+    {
+      "id": "0060_search_then_fetch",
+      "category": "ordering_required",
+      "difficulty": "medium",
+      "prompt": "First search my files for PDFs matching 'security audit', then fetch the document DOC-SEC-2026. The search must come first.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search_files",
+            "description": "Search files in cloud storage.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Keyword to search file names and contents."
+                },
+                "file_type": {
+                  "type": "string",
+                  "description": "File type filter.",
+                  "enum": [
+                    "pdf",
+                    "docx",
+                    "xlsx",
+                    "txt",
+                    "any"
+                  ]
+                },
+                "max_results": {
+                  "type": "integer",
+                  "description": "Optional maximum number of results."
+                }
+              },
+              "required": [
+                "query",
+                "file_type"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_document",
+            "description": "Retrieve a document by its exact document ID.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "document_id": {
+                  "type": "string",
+                  "description": "Document ID, e.g. 'DOC-2024-0117'."
+                }
+              },
+              "required": [
+                "document_id"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "search_files",
+          "arguments": {
+            "query": "security audit",
+            "file_type": "pdf"
+          }
+        },
+        {
+          "name": "get_document",
+          "arguments": {
+            "document_id": "DOC-SEC-2026"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Search precedes retrieval."
+    },
+    {
+      "id": "0061_ticket_then_email",
+      "category": "ordering_required",
+      "difficulty": "hard",
+      "prompt": "In this exact order: first create a high-priority support ticket with subject 'Checkout latency spike' and description 'p95 checkout latency exceeded 4 seconds after the 14:00 deploy.', then send an email to ops@example.com with subject 'Ticket filed: checkout latency' and body 'Tracking the latency spike in a new high-priority ticket.'",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_support_ticket",
+            "description": "Create a customer support ticket.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "description": "Short ticket subject."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Full description of the problem."
+                },
+                "priority": {
+                  "type": "string",
+                  "description": "Ticket priority.",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "urgent"
+                  ]
+                },
+                "customer_email": {
+                  "type": "string",
+                  "description": "Optional customer email address."
+                }
+              },
+              "required": [
+                "subject",
+                "description",
+                "priority"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_email",
+            "description": "Send an email immediately.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_support_ticket",
+          "arguments": {
+            "subject": "Checkout latency spike",
+            "description": "p95 checkout latency exceeded 4 seconds after the 14:00 deploy.",
+            "priority": "high"
+          }
+        },
+        {
+          "name": "send_email",
+          "arguments": {
+            "to": [
+              "ops@example.com"
+            ],
+            "subject": "Ticket filed: checkout latency",
+            "body": "Tracking the latency spike in a new high-priority ticket."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Ticket first, notification second, with verbatim text in both."
+    },
+    {
+      "id": "0062_weather_now_vs_forecast",
+      "category": "tool_choice_under_ambiguity",
+      "difficulty": "medium",
+      "prompt": "Will it rain in Seattle over the next 5 days? Use celsius.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City and country, e.g. 'Toronto, Canada'."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Temperature unit.",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather_forecast",
+            "description": "Get a multi-day weather forecast for a location.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City name, e.g. 'Seattle'."
+                },
+                "days": {
+                  "type": "integer",
+                  "description": "Number of days to forecast."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Temperature unit.",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location",
+                "days",
+                "unit"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "get_weather_forecast",
+          "arguments": {
+            "location": "Seattle",
+            "days": 5,
+            "unit": "celsius"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "'Next 5 days' requires the forecast tool, not current weather."
+    },
+    {
+      "id": "0063_draft_vs_send",
+      "category": "tool_choice_under_ambiguity",
+      "difficulty": "medium",
+      "prompt": "Prepare an email to jordan@example.com with subject 'Renewal quote' and body 'Quote attached for the annual renewal.' — but do NOT send it yet; I want to review it first.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_email_draft",
+            "description": "Create an email draft WITHOUT sending it.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_email",
+            "description": "Send an email immediately.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_email_draft",
+          "arguments": {
+            "to": [
+              "jordan@example.com"
+            ],
+            "subject": "Renewal quote",
+            "body": "Quote attached for the annual renewal."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "'Do not send' means the draft tool; send_email fails the run."
+    },
+    {
+      "id": "0064_reminder_vs_event",
+      "category": "tool_choice_under_ambiguity",
+      "difficulty": "medium",
+      "prompt": "Add a to-do for me: remind me to water the plants on 2026-07-10. Title it 'Water the plants'.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "create_reminder",
+            "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "What to be reminded about."
+                },
+                "due_date": {
+                  "type": "string",
+                  "description": "Due date, format YYYY-MM-DD."
+                },
+                "due_time": {
+                  "type": "string",
+                  "description": "Optional due time, 24-hour HH:MM."
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Optional additional notes."
+                }
+              },
+              "required": [
+                "title",
+                "due_date"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_calendar_event",
+            "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Event title."
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Event date, format YYYY-MM-DD."
+                },
+                "start_time": {
+                  "type": "string",
+                  "description": "Start time, 24-hour format HH:MM."
+                },
+                "end_time": {
+                  "type": "string",
+                  "description": "End time, 24-hour format HH:MM."
+                },
+                "location": {
+                  "type": "string",
+                  "description": "Optional event location."
+                },
+                "attendees": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional list of attendee email addresses."
+                }
+              },
+              "required": [
+                "title",
+                "date",
+                "start_time",
+                "end_time"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "create_reminder",
+          "arguments": {
+            "title": "Water the plants",
+            "due_date": "2026-07-10"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A dated to-do is a reminder, not a calendar event."
+    },
+    {
+      "id": "0065_channel_vs_dm",
+      "category": "tool_choice_under_ambiguity",
+      "difficulty": "medium",
+      "prompt": "Send a direct message to the Slack user marcus saying exactly \"Standup moved to 10am.\"",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "send_slack_message",
+            "description": "Post a message to a Slack channel. Channel names start with '#'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "channel": {
+                  "type": "string",
+                  "description": "Channel name including the leading '#', e.g. '#general'."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message text to post."
+                }
+              },
+              "required": [
+                "channel",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_slack_dm",
+            "description": "Send a direct message to a single Slack user by username (no '@' prefix).",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "string",
+                  "description": "Username without the '@' prefix, e.g. 'marcus'."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Message text to send."
+                }
+              },
+              "required": [
+                "user",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "send_slack_dm",
+          "arguments": {
+            "user": "marcus",
+            "message": "Standup moved to 10am."
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "A DM to a user must use send_slack_dm, whose schema takes a bare username, not a '#channel'."
+    },
+    {
+      "id": "0066_db_vs_calc_vs_search",
+      "category": "tool_choice_under_ambiguity",
+      "difficulty": "hard",
+      "prompt": "How many orders did we get in June 2026? Our own 'sales' database has the answer — run exactly: SELECT COUNT(*) FROM orders WHERE order_date BETWEEN '2026-06-01' AND '2026-06-30'. Don't search the web and don't try to compute it yourself.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "query_database",
+            "description": "Run a read-only SQL query against a named database.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "SQL query to execute, exactly as provided."
+                },
+                "database": {
+                  "type": "string",
+                  "description": "Database name, e.g. 'sales'."
+                }
+              },
+              "required": [
+                "query",
+                "database"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Arithmetic expression to evaluate, without spaces."
+                }
+              },
+              "required": [
+                "expression"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "web_search",
+            "description": "Search the web.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query."
+                },
+                "num_results": {
+                  "type": "integer",
+                  "description": "Number of results to return."
+                }
+              },
+              "required": [
+                "query",
+                "num_results"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "query_database",
+          "arguments": {
+            "query": "SELECT COUNT(*) FROM orders WHERE order_date BETWEEN '2026-06-01' AND '2026-06-30'",
+            "database": "sales"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": true,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Three plausible tools; only the database query is correct."
+    },
+    {
+      "id": "0067_multi_tool_complex_workflow",
+      "category": "multi_tool",
+      "difficulty": "hard",
+      "prompt": "Set up my contract review: (1) look up the contact record for Miguel Ortiz; (2) create a calendar event titled 'Contract review with Miguel Ortiz' on 2026-07-21 from 14:00 to 15:00; (3) send an email to miguel.ortiz@example.com with subject 'Contract review on July 21' and body 'Confirming our contract review at 2pm on July 21.'; (4) create a reminder titled 'Prepare contract notes' due on 2026-07-20.",
+      "system_prompt": "",
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "lookup_contact",
+            "description": "Look up a contact record by full name.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Full name of the contact, e.g. 'Priya Sharma'."
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_calendar_event",
+            "description": "Create a calendar event. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Event title."
+                },
+                "date": {
+                  "type": "string",
+                  "description": "Event date, format YYYY-MM-DD."
+                },
+                "start_time": {
+                  "type": "string",
+                  "description": "Start time, 24-hour format HH:MM."
+                },
+                "end_time": {
+                  "type": "string",
+                  "description": "End time, 24-hour format HH:MM."
+                },
+                "location": {
+                  "type": "string",
+                  "description": "Optional event location."
+                },
+                "attendees": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional list of attendee email addresses."
+                }
+              },
+              "required": [
+                "title",
+                "date",
+                "start_time",
+                "end_time"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "send_email",
+            "description": "Send an email immediately.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Recipient email addresses."
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "Email subject line."
+                },
+                "body": {
+                  "type": "string",
+                  "description": "Email body text."
+                },
+                "cc": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Optional CC email addresses."
+                }
+              },
+              "required": [
+                "to",
+                "subject",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "create_reminder",
+            "description": "Create a personal reminder/task. Not a calendar event — use this for simple to-dos with a due date.",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "What to be reminded about."
+                },
+                "due_date": {
+                  "type": "string",
+                  "description": "Due date, format YYYY-MM-DD."
+                },
+                "due_time": {
+                  "type": "string",
+                  "description": "Optional due time, 24-hour HH:MM."
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "Optional additional notes."
+                }
+              },
+              "required": [
+                "title",
+                "due_date"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ],
+      "expected_tool_calls": [
+        {
+          "name": "lookup_contact",
+          "arguments": {
+            "name": "Miguel Ortiz"
+          }
+        },
+        {
+          "name": "create_calendar_event",
+          "arguments": {
+            "title": "Contract review with Miguel Ortiz",
+            "date": "2026-07-21",
+            "start_time": "14:00",
+            "end_time": "15:00"
+          }
+        },
+        {
+          "name": "send_email",
+          "arguments": {
+            "to": [
+              "miguel.ortiz@example.com"
+            ],
+            "subject": "Contract review on July 21",
+            "body": "Confirming our contract review at 2pm on July 21."
+          }
+        },
+        {
+          "name": "create_reminder",
+          "arguments": {
+            "title": "Prepare contract notes",
+            "due_date": "2026-07-20"
+          }
+        }
+      ],
+      "scoring": {
+        "require_exact_tool_names": true,
+        "require_exact_arguments": true,
+        "allow_extra_tool_calls": false,
+        "require_order": false,
+        "allow_argument_coercion": false,
+        "trim_string_whitespace": true
+      },
+      "notes": "Four tools in one workflow; every argument is pinned by the prompt, order is not enforced."
+    }
+  ]
+}

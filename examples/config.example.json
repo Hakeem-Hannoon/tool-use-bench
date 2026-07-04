@@ -1,0 +1,64 @@
+{
+  "benchmark": "benchmark_samples/full_benchmark.json",
+  "output": "outputs/results.json",
+  "report": "reports/tool_call_report.md",
+  "runs_per_sample": 5,
+  "concurrency": 5,
+  "temperature": 0,
+  "max_retries": 3,
+  "timeout_seconds": 90,
+  "allow_text_tool_call_fallback": false,
+  "resume": true,
+  "force": false,
+  "seed": 12345,
+  "save_raw_responses": true,
+  "models": [
+    {
+      "name": "gpt-4.1",
+      "provider": "openai",
+      "api_key_env": "OPENAI_API_KEY",
+      "endpoint": null,
+      "api_params": {}
+    },
+    {
+      "name": "gpt-4.1",
+      "provider": "azure_openai",
+      "api_key_env": "AZURE_OPENAI_API_KEY",
+      "endpoint": "https://YOUR_RESOURCE.openai.azure.com",
+      "deployment": "gpt-4.1",
+      "api_version": "2025-01-01-preview",
+      "api_params": {}
+    },
+    {
+      "name": "claude-sonnet-4",
+      "provider": "anthropic",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "endpoint": null,
+      "api_params": {}
+    },
+    {
+      "name": "gemini-2.5-pro",
+      "provider": "gemini",
+      "api_key_env": "GEMINI_API_KEY",
+      "endpoint": null,
+      "api_params": {}
+    },
+    {
+      "name": "gemini-2.5-pro",
+      "provider": "vertexai",
+      "api_key_env": null,
+      "endpoint": null,
+      "project_id_env": "VERTEXAI_PROJECT_ID",
+      "location_env": "VERTEXAI_LOCATION",
+      "service_account_path_env": "GOOGLE_APPLICATION_CREDENTIALS",
+      "api_params": {}
+    },
+    {
+      "name": "deepseek-chat",
+      "provider": "openai_compatible",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "endpoint": "https://api.deepseek.com/v1",
+      "api_params": {}
+    }
+  ]
+}

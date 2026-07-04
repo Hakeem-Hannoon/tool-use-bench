@@ -1,0 +1,35 @@
+{
+  "benchmark": "benchmark_samples/full_benchmark.json",
+  "output": "outputs/results.json",
+  "report": "reports/tool_call_report.md",
+  "runs_per_sample": 5,
+  "concurrency": 5,
+  "temperature": 0,
+  "max_retries": 3,
+  "timeout_seconds": 90,
+  "allow_text_tool_call_fallback": false,
+  "resume": true,
+  "force": false,
+  "seed": 12345,
+  "save_raw_responses": true,
+  "models": [
+    {
+      "name": "gpt-4.1",
+      "provider": "azure_openai",
+      "api_key_env": "AZURE_OPENAI_API_KEY",
+      "endpoint": "https://YOUR_RESOURCE.openai.azure.com",
+      "deployment": "gpt-4.1",
+      "api_version": "2025-01-01-preview",
+      "api_params": {}
+    },
+    {
+      "name": "gpt-4o",
+      "provider": "azure_openai",
+      "api_key_env": "AZURE_OPENAI_API_KEY",
+      "endpoint": "https://YOUR_RESOURCE.openai.azure.com",
+      "deployment": "gpt-4o-deployment",
+      "api_version": "2025-01-01-preview",
+      "api_params": {}
+    }
+  ]
+}

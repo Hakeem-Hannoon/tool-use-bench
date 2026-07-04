@@ -1,0 +1,78 @@
+{
+  "id": "0055_nested_event_update",
+  "category": "argument_precision",
+  "difficulty": "hard",
+  "prompt": "Move event EVT-3391 to 2026-08-07 with a new start time of 10:00. Change nothing else.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "update_calendar_event",
+        "description": "Update fields of an existing calendar event. Only include fields being changed. Dates use YYYY-MM-DD; times use 24-hour HH:MM.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "description": "ID of the event to update, e.g. 'EVT-1234'."
+            },
+            "changes": {
+              "type": "object",
+              "description": "Fields to change.",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "New title."
+                },
+                "date": {
+                  "type": "string",
+                  "description": "New date, format YYYY-MM-DD."
+                },
+                "start_time": {
+                  "type": "string",
+                  "description": "New start time, 24-hour HH:MM."
+                },
+                "end_time": {
+                  "type": "string",
+                  "description": "New end time, 24-hour HH:MM."
+                },
+                "location": {
+                  "type": "string",
+                  "description": "New location."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "event_id",
+            "changes"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "update_calendar_event",
+      "arguments": {
+        "event_id": "EVT-3391",
+        "changes": {
+          "date": "2026-08-07",
+          "start_time": "10:00"
+        }
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A nested object argument must contain exactly two keys — adding or omitting fields inside 'changes' fails the run."
+}

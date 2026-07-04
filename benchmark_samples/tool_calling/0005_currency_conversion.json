@@ -1,0 +1,58 @@
+{
+  "id": "0005_currency_conversion",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Convert 250 US dollars to euros.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "convert_currency",
+        "description": "Convert an amount between currencies using ISO 4217 codes.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "description": "Amount to convert, as a number."
+            },
+            "from_currency": {
+              "type": "string",
+              "description": "3-letter uppercase ISO currency code, e.g. 'USD'."
+            },
+            "to_currency": {
+              "type": "string",
+              "description": "3-letter uppercase ISO currency code, e.g. 'EUR'."
+            }
+          },
+          "required": [
+            "amount",
+            "from_currency",
+            "to_currency"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "convert_currency",
+      "arguments": {
+        "amount": 250,
+        "from_currency": "USD",
+        "to_currency": "EUR"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests numeric amount plus ISO currency code normalization."
+}

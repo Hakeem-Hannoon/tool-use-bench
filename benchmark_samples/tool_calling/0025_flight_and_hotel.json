@@ -1,0 +1,113 @@
+{
+  "id": "0025_flight_and_hotel",
+  "category": "multi_tool",
+  "difficulty": "hard",
+  "prompt": "Plan my Tokyo trip: search round-trip flights for 2 passengers from SFO to NRT departing 2026-10-02 and returning 2026-10-16, and search hotels in Tokyo, Japan for 2 guests checking in 2026-10-02 and out 2026-10-16.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_flights",
+        "description": "Search flights between airports. Airports use 3-letter uppercase IATA codes. Dates use YYYY-MM-DD.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "type": "string",
+              "description": "Origin airport IATA code, e.g. 'SFO'."
+            },
+            "destination": {
+              "type": "string",
+              "description": "Destination airport IATA code, e.g. 'NRT'."
+            },
+            "departure_date": {
+              "type": "string",
+              "description": "Departure date, format YYYY-MM-DD."
+            },
+            "return_date": {
+              "type": "string",
+              "description": "Optional return date for round trips, YYYY-MM-DD."
+            },
+            "passengers": {
+              "type": "integer",
+              "description": "Number of passengers."
+            }
+          },
+          "required": [
+            "origin",
+            "destination",
+            "departure_date",
+            "passengers"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "search_hotels",
+        "description": "Search hotels in a location. Dates use YYYY-MM-DD.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City and country, e.g. 'Tokyo, Japan'."
+            },
+            "check_in": {
+              "type": "string",
+              "description": "Check-in date, format YYYY-MM-DD."
+            },
+            "check_out": {
+              "type": "string",
+              "description": "Check-out date, format YYYY-MM-DD."
+            },
+            "guests": {
+              "type": "integer",
+              "description": "Number of guests."
+            }
+          },
+          "required": [
+            "location",
+            "check_in",
+            "check_out",
+            "guests"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_flights",
+      "arguments": {
+        "origin": "SFO",
+        "destination": "NRT",
+        "departure_date": "2026-10-02",
+        "return_date": "2026-10-16",
+        "passengers": 2
+      }
+    },
+    {
+      "name": "search_hotels",
+      "arguments": {
+        "location": "Tokyo, Japan",
+        "check_in": "2026-10-02",
+        "check_out": "2026-10-16",
+        "guests": 2
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Nine precise arguments across two travel tools."
+}

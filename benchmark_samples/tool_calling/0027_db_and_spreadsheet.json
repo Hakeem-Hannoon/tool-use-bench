@@ -1,0 +1,96 @@
+{
+  "id": "0027_db_and_spreadsheet",
+  "category": "multi_tool",
+  "difficulty": "hard",
+  "prompt": "Run this SQL against the 'analytics' database: SELECT region, SUM(revenue) FROM sales_2025 GROUP BY region — and set cell B2 of the 'Summary' sheet in spreadsheet SS-778 to the text 'refresh scheduled'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "query_database",
+        "description": "Run a read-only SQL query against a named database.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "SQL query to execute, exactly as provided."
+            },
+            "database": {
+              "type": "string",
+              "description": "Database name, e.g. 'sales'."
+            }
+          },
+          "required": [
+            "query",
+            "database"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_spreadsheet_cell",
+        "description": "Set the value of a single spreadsheet cell.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "spreadsheet_id": {
+              "type": "string",
+              "description": "Spreadsheet ID, e.g. 'SS-778'."
+            },
+            "sheet_name": {
+              "type": "string",
+              "description": "Name of the sheet tab."
+            },
+            "cell": {
+              "type": "string",
+              "description": "Cell reference in A1 notation, e.g. 'B2'."
+            },
+            "value": {
+              "type": "string",
+              "description": "New cell value, as text."
+            }
+          },
+          "required": [
+            "spreadsheet_id",
+            "sheet_name",
+            "cell",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "query_database",
+      "arguments": {
+        "query": "SELECT region, SUM(revenue) FROM sales_2025 GROUP BY region",
+        "database": "analytics"
+      }
+    },
+    {
+      "name": "update_spreadsheet_cell",
+      "arguments": {
+        "spreadsheet_id": "SS-778",
+        "sheet_name": "Summary",
+        "cell": "B2",
+        "value": "refresh scheduled"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A verbatim SQL string plus a four-argument spreadsheet update."
+}

@@ -1,0 +1,89 @@
+{
+  "id": "0029_files_and_document",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "Search my files for Word documents (docx) matching 'onboarding checklist', and also fetch the document with ID DOC-ONBOARD-01.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_files",
+        "description": "Search files in cloud storage.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Keyword to search file names and contents."
+            },
+            "file_type": {
+              "type": "string",
+              "description": "File type filter.",
+              "enum": [
+                "pdf",
+                "docx",
+                "xlsx",
+                "txt",
+                "any"
+              ]
+            },
+            "max_results": {
+              "type": "integer",
+              "description": "Optional maximum number of results."
+            }
+          },
+          "required": [
+            "query",
+            "file_type"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_document",
+        "description": "Retrieve a document by its exact document ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "document_id": {
+              "type": "string",
+              "description": "Document ID, e.g. 'DOC-2024-0117'."
+            }
+          },
+          "required": [
+            "document_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_files",
+      "arguments": {
+        "query": "onboarding checklist",
+        "file_type": "docx"
+      }
+    },
+    {
+      "name": "get_document",
+      "arguments": {
+        "document_id": "DOC-ONBOARD-01"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A filtered file search plus a direct document fetch."
+}

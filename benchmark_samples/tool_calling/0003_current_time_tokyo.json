@@ -1,0 +1,46 @@
+{
+  "id": "0003_current_time_tokyo",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "What time is it right now in Tokyo, Japan?",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_current_time",
+        "description": "Get the current time in a timezone.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+            }
+          },
+          "required": [
+            "timezone"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_current_time",
+      "arguments": {
+        "timezone": "Asia/Tokyo"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests mapping a city to its IANA timezone identifier."
+}

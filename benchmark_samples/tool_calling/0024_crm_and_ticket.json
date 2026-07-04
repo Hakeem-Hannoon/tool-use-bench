@@ -1,0 +1,106 @@
+{
+  "id": "0024_crm_and_ticket",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "Update CRM contact C-4491: set the field 'status' to the value 'churn_risk'. Also open a support ticket with subject 'Repeated login failures', description 'Customer C-4491 reports login failures since the last release.', and high priority.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "update_crm_contact",
+        "description": "Update one field of a CRM contact record.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "contact_id": {
+              "type": "string",
+              "description": "CRM contact ID, e.g. 'C-4491'."
+            },
+            "field": {
+              "type": "string",
+              "description": "Field name to update, e.g. 'status'."
+            },
+            "value": {
+              "type": "string",
+              "description": "New value for the field."
+            }
+          },
+          "required": [
+            "contact_id",
+            "field",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_support_ticket",
+        "description": "Create a customer support ticket.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "description": "Short ticket subject."
+            },
+            "description": {
+              "type": "string",
+              "description": "Full description of the problem."
+            },
+            "priority": {
+              "type": "string",
+              "description": "Ticket priority.",
+              "enum": [
+                "low",
+                "medium",
+                "high",
+                "urgent"
+              ]
+            },
+            "customer_email": {
+              "type": "string",
+              "description": "Optional customer email address."
+            }
+          },
+          "required": [
+            "subject",
+            "description",
+            "priority"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "update_crm_contact",
+      "arguments": {
+        "contact_id": "C-4491",
+        "field": "status",
+        "value": "churn_risk"
+      }
+    },
+    {
+      "name": "create_support_ticket",
+      "arguments": {
+        "subject": "Repeated login failures",
+        "description": "Customer C-4491 reports login failures since the last release.",
+        "priority": "high"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "A CRM field update plus ticket creation with an enum priority."
+}

@@ -1,0 +1,46 @@
+{
+  "id": "0011_document_retrieval",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Fetch the document with ID DOC-2024-0117.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_document",
+        "description": "Retrieve a document by its exact document ID.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "document_id": {
+              "type": "string",
+              "description": "Document ID, e.g. 'DOC-2024-0117'."
+            }
+          },
+          "required": [
+            "document_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_document",
+      "arguments": {
+        "document_id": "DOC-2024-0117"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests copying an exact document ID."
+}

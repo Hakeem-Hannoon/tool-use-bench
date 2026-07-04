@@ -1,0 +1,52 @@
+{
+  "id": "0012_github_pr_lookup",
+  "category": "single_tool",
+  "difficulty": "easy",
+  "prompt": "Show me pull request #482 in the acme/website repository.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_github_pull_request",
+        "description": "Fetch a GitHub pull request by number.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "type": "string",
+              "description": "Repository in 'owner/name' form."
+            },
+            "pr_number": {
+              "type": "integer",
+              "description": "Pull request number."
+            }
+          },
+          "required": [
+            "repo",
+            "pr_number"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_github_pull_request",
+      "arguments": {
+        "repo": "acme/website",
+        "pr_number": 482
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests an owner/name repo string and an integer PR number (not the string '#482')."
+}

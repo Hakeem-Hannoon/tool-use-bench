@@ -1,0 +1,44 @@
+{
+  "id": "0038_general_knowledge_capital",
+  "category": "no_tool_decoy",
+  "difficulty": "easy",
+  "prompt": "What is the capital of Australia?",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "description": "Search the web.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query."
+            },
+            "num_results": {
+              "type": "integer",
+              "description": "Number of results to return."
+            }
+          },
+          "required": [
+            "query",
+            "num_results"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Stable general knowledge; searching the web is an unnecessary tool call and fails the run."
+}

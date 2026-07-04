@@ -1,0 +1,57 @@
+{
+  "id": "0018_code_execution",
+  "category": "single_tool",
+  "difficulty": "medium",
+  "prompt": "Run this Python code exactly as written: print(sum(range(1, 101)))",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "execute_code",
+        "description": "Execute a code snippet and return its output.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "description": "Programming language.",
+              "enum": [
+                "python",
+                "javascript",
+                "sql"
+              ]
+            },
+            "code": {
+              "type": "string",
+              "description": "Source code to execute, exactly as provided."
+            }
+          },
+          "required": [
+            "language",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "execute_code",
+      "arguments": {
+        "language": "python",
+        "code": "print(sum(range(1, 101)))"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests a language enum plus verbatim code, resisting the temptation to compute the answer directly."
+}

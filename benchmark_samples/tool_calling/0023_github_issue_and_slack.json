@@ -1,0 +1,100 @@
+{
+  "id": "0023_github_issue_and_slack",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "File a GitHub issue in acme/api titled 'Rate limiter returns 500 under load' with body 'Load tests above 200 rps trigger HTTP 500 responses from the rate limiter.' and the single label 'bug'. Also post exactly \"Filed the rate limiter issue.\" to the #eng-alerts channel.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "create_github_issue",
+        "description": "Create a GitHub issue in a repository.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "type": "string",
+              "description": "Repository in 'owner/name' form, e.g. 'acme/api'."
+            },
+            "title": {
+              "type": "string",
+              "description": "Issue title."
+            },
+            "body": {
+              "type": "string",
+              "description": "Issue body text."
+            },
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional labels to apply, in order."
+            }
+          },
+          "required": [
+            "repo",
+            "title",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_slack_message",
+        "description": "Post a message to a Slack channel. Channel names start with '#'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "channel": {
+              "type": "string",
+              "description": "Channel name including the leading '#', e.g. '#general'."
+            },
+            "message": {
+              "type": "string",
+              "description": "Message text to post."
+            }
+          },
+          "required": [
+            "channel",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_github_issue",
+      "arguments": {
+        "repo": "acme/api",
+        "title": "Rate limiter returns 500 under load",
+        "body": "Load tests above 200 rps trigger HTTP 500 responses from the rate limiter.",
+        "labels": [
+          "bug"
+        ]
+      }
+    },
+    {
+      "name": "send_slack_message",
+      "arguments": {
+        "channel": "#eng-alerts",
+        "message": "Filed the rate limiter issue."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "An issue plus a notification; both quoted texts must be verbatim."
+}

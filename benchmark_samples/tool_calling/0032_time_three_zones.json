@@ -1,0 +1,58 @@
+{
+  "id": "0032_time_three_zones",
+  "category": "parallel_tools",
+  "difficulty": "easy",
+  "prompt": "Get the current time in each of these timezones: 'America/New_York', 'Europe/London', and 'Asia/Singapore'.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_current_time",
+        "description": "Get the current time in a timezone.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "description": "IANA timezone identifier, e.g. 'Asia/Tokyo'."
+            }
+          },
+          "required": [
+            "timezone"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "get_current_time",
+      "arguments": {
+        "timezone": "America/New_York"
+      }
+    },
+    {
+      "name": "get_current_time",
+      "arguments": {
+        "timezone": "Europe/London"
+      }
+    },
+    {
+      "name": "get_current_time",
+      "arguments": {
+        "timezone": "Asia/Singapore"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Three parallel time lookups with explicit IANA zones."
+}

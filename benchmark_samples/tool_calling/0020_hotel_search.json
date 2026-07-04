@@ -1,0 +1,64 @@
+{
+  "id": "0020_hotel_search",
+  "category": "single_tool",
+  "difficulty": "medium",
+  "prompt": "Find hotels in Barcelona, Spain for 2 guests, checking in 2026-09-04 and out 2026-09-08.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_hotels",
+        "description": "Search hotels in a location. Dates use YYYY-MM-DD.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "City and country, e.g. 'Tokyo, Japan'."
+            },
+            "check_in": {
+              "type": "string",
+              "description": "Check-in date, format YYYY-MM-DD."
+            },
+            "check_out": {
+              "type": "string",
+              "description": "Check-out date, format YYYY-MM-DD."
+            },
+            "guests": {
+              "type": "integer",
+              "description": "Number of guests."
+            }
+          },
+          "required": [
+            "location",
+            "check_in",
+            "check_out",
+            "guests"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_hotels",
+      "arguments": {
+        "location": "Barcelona, Spain",
+        "check_in": "2026-09-04",
+        "check_out": "2026-09-08",
+        "guests": 2
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Tests four required arguments including two ISO dates and an integer guest count."
+}

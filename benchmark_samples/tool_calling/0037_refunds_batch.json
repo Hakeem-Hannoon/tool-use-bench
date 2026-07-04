@@ -1,0 +1,58 @@
+{
+  "id": "0037_refunds_batch",
+  "category": "parallel_tools",
+  "difficulty": "medium",
+  "prompt": "Check the refund status for each of these orders: ORD-10001, ORD-10002, and ORD-10003.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "lookup_refund",
+        "description": "Look up the refund/payment status for an order.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "Order ID, e.g. 'ORD-88213'."
+            }
+          },
+          "required": [
+            "order_id"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "lookup_refund",
+      "arguments": {
+        "order_id": "ORD-10001"
+      }
+    },
+    {
+      "name": "lookup_refund",
+      "arguments": {
+        "order_id": "ORD-10002"
+      }
+    },
+    {
+      "name": "lookup_refund",
+      "arguments": {
+        "order_id": "ORD-10003"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "One lookup per order ID."
+}

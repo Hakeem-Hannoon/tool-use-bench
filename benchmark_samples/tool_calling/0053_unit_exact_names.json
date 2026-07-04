@@ -1,0 +1,58 @@
+{
+  "id": "0053_unit_exact_names",
+  "category": "argument_precision",
+  "difficulty": "medium",
+  "prompt": "Convert 98.6 degrees Fahrenheit to Celsius.",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "convert_units",
+        "description": "Convert a value between measurement units. Unit names are lowercase plural words, e.g. 'miles', 'kilometers', 'fahrenheit', 'celsius'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "description": "Numeric value to convert."
+            },
+            "from_unit": {
+              "type": "string",
+              "description": "Source unit, lowercase."
+            },
+            "to_unit": {
+              "type": "string",
+              "description": "Target unit, lowercase."
+            }
+          },
+          "required": [
+            "value",
+            "from_unit",
+            "to_unit"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "convert_units",
+      "arguments": {
+        "value": 98.6,
+        "from_unit": "fahrenheit",
+        "to_unit": "celsius"
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Unit names must be lowercased exactly as the schema describes."
+}

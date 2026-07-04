@@ -1,0 +1,152 @@
+{
+  "id": "0022_email_search_and_draft",
+  "category": "multi_tool",
+  "difficulty": "medium",
+  "prompt": "Search all my email folders (folder 'all') for messages matching 'contract renewal'. Also draft — but do not send — an email to legal@example.com with subject 'Contract renewal status' and body 'Please send an update on the renewal.'",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "search_emails",
+        "description": "Search email messages.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Keyword to search subject and body."
+            },
+            "folder": {
+              "type": "string",
+              "description": "Folder to search.",
+              "enum": [
+                "inbox",
+                "sent",
+                "archive",
+                "all"
+              ]
+            },
+            "unread_only": {
+              "type": "boolean",
+              "description": "If true, only return unread messages."
+            }
+          },
+          "required": [
+            "query",
+            "folder"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "create_email_draft",
+        "description": "Create an email draft WITHOUT sending it.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "send_email",
+        "description": "Send an email immediately.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Recipient email addresses."
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject line."
+            },
+            "body": {
+              "type": "string",
+              "description": "Email body text."
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional CC email addresses."
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "search_emails",
+      "arguments": {
+        "query": "contract renewal",
+        "folder": "all"
+      }
+    },
+    {
+      "name": "create_email_draft",
+      "arguments": {
+        "to": [
+          "legal@example.com"
+        ],
+        "subject": "Contract renewal status",
+        "body": "Please send an update on the renewal."
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Requires a search plus a draft; calling send_email instead of create_email_draft fails the run."
+}

@@ -1,0 +1,39 @@
+{
+  "id": "0039_trivial_arithmetic",
+  "category": "no_tool_decoy",
+  "difficulty": "medium",
+  "prompt": "What is 2 + 2?",
+  "system_prompt": "",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "calculator",
+        "description": "Evaluate an arithmetic expression string, e.g. '2+2' or '847*293'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "expression": {
+              "type": "string",
+              "description": "Arithmetic expression to evaluate, without spaces."
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": true,
+    "allow_extra_tool_calls": false,
+    "require_order": true,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true
+  },
+  "notes": "Trivial arithmetic with a calculator dangled as bait."
+}
