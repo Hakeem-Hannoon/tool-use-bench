@@ -180,13 +180,17 @@ def _print_summary_tables(results: dict) -> None:
                             ("Provider", "left"), ("Successful", "right"),
                             ("Total", "right"), ("Success Rate", "right")):
         ranking.add_column(column, justify=justify)
+    ranking.add_column("Cost / Run", justify="right")
     ranked = sorted(results["model_summaries"],
-                    key=lambda m: (-m["success_rate"], m["model"],
+                    key=lambda m: (-m["success_rate"],
+                                   m.get("label") or m["model"],
                                    m["provider"]))
     for i, m in enumerate(ranked, start=1):
-        ranking.add_row(str(i), m["model"], m["provider"],
+        cost = m.get("cost_per_run_usd")
+        ranking.add_row(str(i), m.get("label") or m["model"], m["provider"],
                         str(m["successful_runs"]), str(m["total_runs"]),
-                        m["success_rate_percent"])
+                        m["success_rate_percent"],
+                        "—" if cost is None else f"${cost:.6f}")
     console.print(ranking)
 
     categories = Table(title="Per-Category Success Rates")
@@ -194,8 +198,8 @@ def _print_summary_tables(results: dict) -> None:
                             ("Category", "left"), ("Success Rate", "right")):
         categories.add_column(column, justify=justify)
     for c in results["category_summaries"]:
-        categories.add_row(c["model"], c["provider"], c["category"],
-                           c["success_rate_percent"])
+        categories.add_row(c.get("label") or c["model"], c["provider"],
+                           c["category"], c["success_rate_percent"])
     console.print(categories)
 
     failure_counts = results["failure_statistics"]["failure_type_counts"]

@@ -133,3 +133,108 @@ def test_markdown_report_normalized_sections():
     # Report is generated from results.json content only — env var names may
     # appear, secret values never exist in the document at all.
     assert "OPENAI_API_KEY" in md
+
+
+# ---------------------------------------------------------------------------
+# Protocol-aware grouping, cost, latency, workload picks
+# ---------------------------------------------------------------------------
+
+from benchmark.reporting import percentile, workload_picks  # noqa: E402
+from benchmark.schema import Usage  # noqa: E402
+
+
+def two_protocol_doc():
+    config = BenchmarkConfig.model_validate({
+        "runs_per_sample": 2,
+        "reliability_bar": 0.9,
+        "models": [
+            {"name": "grok", "provider": "openai_compatible",
+             "endpoint_env": "AZURE_FOUNDRY_ENDPOINT", "protocol": "native",
+             "pricing": {"input_per_mtok": 0.2, "output_per_mtok": 0.5}},
+            {"name": "grok", "provider": "openai_compatible",
+             "endpoint_env": "AZURE_FOUNDRY_ENDPOINT",
+             "protocol": "spotter_router",
+             "pricing": {"input_per_mtok": 0.2, "output_per_mtok": 0.5}},
+        ],
+    })
+    samples = validate_samples(build_all_samples())[:2]
+    records = []
+    for cfg_index, model_cfg in enumerate(config.models):
+        for sample in samples:
+            for run_index in range(config.runs_per_sample):
+                # The router entry fails every run of the first sample.
+                fail = cfg_index == 1 and sample is samples[0]
+                result = ProviderResult(
+                    model=model_cfg.name, provider=model_cfg.provider,
+                    sample_id=sample.id, run_index=run_index,
+                    tool_calls=[] if fail else sample.expected_tool_calls,
+                    latency_ms=100 * (run_index + 1),
+                    usage=Usage(input_tokens=10_000 * (cfg_index + 1),
+                                output_tokens=100),
+                )
+                records.append(_record_from_result(
+                    sample, result, save_raw=False, model_cfg=model_cfg))
+    doc = build_results_document(
+        config=config, config_path="c.json", config_hash="h", samples=samples,
+        sample_hash="s", sample_file="f", records=records,
+        started_utc="t0", finished_utc="t1", generated_utc="t1")
+    return config, samples, doc
+
+
+def test_same_model_under_two_protocols_stays_separate():
+    _, _, doc = two_protocol_doc()
+    native, router = doc["model_summaries"]
+    assert native["protocol"] == "native" and router["protocol"] == "spotter_router"
+    assert native["model_key"] != router["model_key"]
+    assert native["success_rate"] == 1.0
+    assert router["success_rate"] == 0.5
+    assert router["label"] == "grok (spotter_router)"
+
+
+def test_cost_and_latency_statistics():
+    _, samples, doc = two_protocol_doc()
+    native, router = doc["model_summaries"]
+    # 10k input * 0.2 + 100 output * 0.5 per million = 0.00205 per run
+    assert native["cost_per_run_usd"] == 0.00205
+    assert native["total_cost_usd"] == 0.00205 * 4
+    assert native["cost_per_successful_run_usd"] == 0.00205
+    assert router["cost_per_successful_run_usd"] == round(0.00405 * 4 / 2, 8)
+    assert native["avg_input_tokens"] == 10_000
+    assert native["latency_p50_ms"] == 100 and native["latency_p95_ms"] == 200
+
+
+def test_workload_picks_cheapest_model_clearing_the_bar():
+    _, samples, doc = two_protocol_doc()
+    picks = {p["category"]: p for p in doc["workload_picks"]}
+    first_category = samples[0].category
+    pick = picks[first_category]
+    assert pick["clears_bar"] and pick["label"] == "grok"
+    rows = [
+        {"category": "x", "label": "cheap", "model_key": "a",
+         "success_rate": 0.97, "success_rate_percent": "97.00%",
+         "cost_per_run_usd": 0.001},
+        {"category": "x", "label": "pricey", "model_key": "b",
+         "success_rate": 1.0, "success_rate_percent": "100.00%",
+         "cost_per_run_usd": 0.01},
+        {"category": "y", "label": "flaky", "model_key": "a",
+         "success_rate": 0.5, "success_rate_percent": "50.00%",
+         "cost_per_run_usd": 0.001},
+    ]
+    by_cat = {p["category"]: p for p in workload_picks(rows, 0.95)}
+    assert by_cat["x"]["label"] == "cheap" and by_cat["x"]["eligible_models"] == 2
+    assert by_cat["y"]["clears_bar"] is False
+
+
+def test_markdown_report_has_cost_and_picks_sections():
+    _, _, doc = two_protocol_doc()
+    md = generate_markdown_report(doc)
+    assert "## Cost & Latency" in md and "## Workload Picks" in md
+    assert "grok (spotter_router)" in md
+    assert "$AZURE_FOUNDRY_ENDPOINT" in md  # env var name, never a value
+
+
+def test_percentile_is_nearest_rank():
+    assert percentile([], 50) is None
+    assert percentile([5], 95) == 5
+    assert percentile(list(range(1, 101)), 95) == 95
+    assert percentile([3, 1, 2, 4], 50) == 2
