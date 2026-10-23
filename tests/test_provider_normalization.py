@@ -6,12 +6,11 @@ import pytest
 from fakes import ScriptedProvider, model_cfg
 from fakes import native as fake_native, text as fake_text
 
-from benchmark.config import ModelConfig
 from benchmark.providers.anthropic_provider import (
     convert_tools_to_anthropic, extract_anthropic_tool_calls,
 )
 from benchmark.providers.base import (
-    BaseProvider, ProviderSettings, parse_tool_calls_from_text,
+    ProviderSettings, parse_tool_calls_from_text,
 )
 from benchmark.providers.gemini_provider import (
     convert_tools_to_gemini, extract_gemini_tool_calls,
