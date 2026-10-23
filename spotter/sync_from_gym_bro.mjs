@@ -5,6 +5,7 @@
  *
  *   npm --prefix spotter install
  *   node spotter/sync_from_gym_bro.mjs ../gym-bro [--today 2026-10-21]
+ *   node spotter/sync_from_gym_bro.mjs ../gym-bro --check-routes routes.json
  *
  * What it writes:
  *   snapshot/tools.json          every TOOL_CATALOG entry: name, write flag,
@@ -28,11 +29,20 @@
  * The script fails loudly when the catalog and the maps below drift apart
  * (a tool added, renamed or removed in Spotter), so a stale snapshot can't
  * slip through silently.
+ *
+ * --check-routes FILE  runs production's resolveAgentDomain on every sample
+ *                      prompt in FILE ({id: {prompt, domain}}, written by
+ *                      `benchmark spotter-routes`) and exits non-zero when a
+ *                      sample's declared route differs, or when one of the
+ *                      deterministic fast paths (macro goals, workout
+ *                      shorthand, today's planned workout) would answer the
+ *                      prompt without a model call — such a sample would
+ *                      benchmark traffic the model never sees. Writes nothing.
  */
 
 import { build } from "esbuild";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
@@ -46,8 +56,10 @@ const require = createRequire(import.meta.url);
 const argv = process.argv.slice(2);
 let repoArg = null;
 let today = "2026-10-21"; // fixed "today" so dated samples stay deterministic
+let checkRoutes = null;
 for (let i = 0; i < argv.length; i++) {
   if (argv[i] === "--today") today = argv[++i];
+  else if (argv[i] === "--check-routes") checkRoutes = argv[++i];
   else if (!repoArg) repoArg = argv[i];
 }
 if (!repoArg) {
@@ -202,7 +214,10 @@ const entry = [
   `export * as schemas from ${JSON.stringify(path.join(AGENT, "schemas.ts"))};`,
   `export { TOOL_CATALOG } from ${JSON.stringify(path.join(AGENT, "tools.ts"))};`,
   `export { buildSystemPrompt } from ${JSON.stringify(path.join(AGENT, "prompts.ts"))};`,
-  `export { toolNamesForDomain } from ${JSON.stringify(path.join(AGENT, "domain-route.ts"))};`,
+  `export { toolNamesForDomain, resolveAgentDomain } from ${JSON.stringify(path.join(AGENT, "domain-route.ts"))};`,
+  `export { parseMacroGoalsText } from ${JSON.stringify(path.join(AGENT, "macro-goals-text-parser.ts"))};`,
+  `export { parseWorkoutShorthand, FAST_PATH_CONFIDENCE } from ${JSON.stringify(path.join(AGENT, "workout-text-parser.ts"))};`,
+  `export { didTodaysPlan } from ${JSON.stringify(path.join(AGENT, "planned-workout.ts"))};`,
   `export { zodToJsonSchema } from "zod-to-json-schema";`,
 ].join("\n");
 
@@ -224,6 +239,32 @@ try {
   mod = require(outfile);
 } finally {
   rmSync(tmp, { recursive: true, force: true });
+}
+
+// ----------------------------------------------------------- route check
+
+if (checkRoutes) {
+  const samples = JSON.parse(readFileSync(checkRoutes, "utf8"));
+  const gate = mod.FAST_PATH_CONFIDENCE;
+  const wrong = [];
+  const intercepted = [];
+  for (const [id, { prompt, domain }] of Object.entries(samples)) {
+    const actual = mod.resolveAgentDomain({ message: prompt });
+    if (actual !== domain) wrong.push(`  ${id}: declared ${domain}, production routes ${actual} — "${prompt}"`);
+    const goals = mod.parseMacroGoalsText(prompt);
+    const shorthand = mod.parseWorkoutShorthand(prompt);
+    const path_ =
+      goals && goals.confidence >= gate ? "macro-goals"
+      : shorthand && shorthand.confidence >= gate ? "workout shorthand"
+      : mod.didTodaysPlan(prompt) ? "planned workout"
+      : null;
+    if (path_) intercepted.push(`  ${id}: the ${path_} fast path answers this without the model — "${prompt}"`);
+  }
+  if (wrong.length) console.error(`${wrong.length} sample(s) declare the wrong route:\n${wrong.join("\n")}`);
+  if (intercepted.length) console.error(`${intercepted.length} sample(s) never reach the model:\n${intercepted.join("\n")}`);
+  if (wrong.length || intercepted.length) process.exit(1);
+  console.log(`all ${Object.keys(samples).length} sample routes match production and reach the model`);
+  process.exit(0);
 }
 
 // ------------------------------------------------------------ validation

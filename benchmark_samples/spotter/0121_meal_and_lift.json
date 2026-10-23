@@ -1,0 +1,198 @@
+{
+  "id": "0121_meal_and_lift",
+  "category": "compound",
+  "difficulty": "hard",
+  "prompt": "had 3 eggs for breakfast, then hit squats 275 for 5 sets of 3",
+  "system_prompt_refs": {
+    "spotter_router": "compound.spotter_router",
+    "native": "compound.native"
+  },
+  "tool_refs": [
+    "get_user_profile",
+    "update_user_profile",
+    "remember",
+    "forget",
+    "control_rest_timer",
+    "show_table",
+    "search_workouts",
+    "get_recent_workouts",
+    "get_exercise_history",
+    "get_progress_summary",
+    "get_bodyweight_history",
+    "plot_workout_data",
+    "find_exercise_videos",
+    "identify_equipment_from_image",
+    "show_workout_plan",
+    "show_saved_plan",
+    "create_pending_workout_session",
+    "log_planned_workout",
+    "create_pending_workout_edit",
+    "create_pending_workout_delete",
+    "create_pending_exercise_rename",
+    "create_exercise_alias",
+    "create_pending_body_metric",
+    "create_pending_plan",
+    "set_active_plan",
+    "get_workout_plan",
+    "get_progression_suggestions",
+    "create_pending_macro_log",
+    "get_macros_today",
+    "show_macro_summary",
+    "list_saved_meals",
+    "log_saved_meal",
+    "log_plan_meal",
+    "get_adaptive_targets",
+    "set_macro_goals",
+    "get_nutrition_profile",
+    "get_meal_plans",
+    "create_pending_meal_plan",
+    "lookup_nutrition",
+    "lookup_barcode",
+    "save_named_meal",
+    "delete_saved_meal"
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "create_pending_macro_log",
+      "arguments": {
+        "items": [
+          {
+            "description": {
+              "$contains": "egg"
+            },
+            "proteinG": {
+              "$range": [
+                15,
+                23
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "create_pending_workout_session",
+      "arguments": {
+        "date": {
+          "$optional": "2026-10-21"
+        },
+        "exercises": [
+          {
+            "name": {
+              "$regex": "(?i)(barbell |back )*squats?( \\(barbell\\))?"
+            },
+            "sets": [
+              {
+                "reps": 3,
+                "weight": 275,
+                "weightUnit": {
+                  "$optional": "lb"
+                },
+                "setType": {
+                  "$optional": "working"
+                }
+              },
+              {
+                "reps": 3,
+                "weight": 275,
+                "weightUnit": {
+                  "$optional": "lb"
+                },
+                "setType": {
+                  "$optional": "working"
+                }
+              },
+              {
+                "reps": 3,
+                "weight": 275,
+                "weightUnit": {
+                  "$optional": "lb"
+                },
+                "setType": {
+                  "$optional": "working"
+                }
+              },
+              {
+                "reps": 3,
+                "weight": 275,
+                "weightUnit": {
+                  "$optional": "lb"
+                },
+                "setType": {
+                  "$optional": "working"
+                }
+              },
+              {
+                "reps": 3,
+                "weight": 275,
+                "weightUnit": {
+                  "$optional": "lb"
+                },
+                "setType": {
+                  "$optional": "working"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": false,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true,
+    "allowed_extra_tools": [
+      "get_adaptive_targets",
+      "get_bodyweight_history",
+      "get_exercise_history",
+      "get_macros_today",
+      "get_meal_plans",
+      "get_nutrition_profile",
+      "get_progress_summary",
+      "get_progression_suggestions",
+      "get_recent_workouts",
+      "get_user_profile",
+      "get_workout_plan",
+      "list_saved_meals",
+      "lookup_barcode",
+      "lookup_nutrition",
+      "search_workouts"
+    ],
+    "validate_arguments_schema": true
+  },
+  "max_steps": 8,
+  "terminal_tools": [
+    "update_user_profile",
+    "control_rest_timer",
+    "show_table",
+    "plot_workout_data",
+    "find_exercise_videos",
+    "identify_equipment_from_image",
+    "show_workout_plan",
+    "show_saved_plan",
+    "create_pending_workout_session",
+    "log_planned_workout",
+    "create_pending_workout_edit",
+    "create_pending_workout_delete",
+    "create_pending_exercise_rename",
+    "create_exercise_alias",
+    "create_pending_body_metric",
+    "create_pending_plan",
+    "set_active_plan",
+    "create_pending_macro_log",
+    "show_macro_summary",
+    "log_saved_meal",
+    "log_plan_meal",
+    "set_macro_goals",
+    "create_pending_meal_plan",
+    "save_named_meal",
+    "delete_saved_meal"
+  ],
+  "continue_after_terminal": true,
+  "tool_result_set": "fixture_user",
+  "notes": "[compound route] Meal + lift in one message → a macro card AND a workout card."
+}
