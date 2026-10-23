@@ -9,9 +9,9 @@ from benchmark.samples import (
     generate_sample_files, load_benchmark_file, samples_hash,
     validate_samples,
 )
-from benchmark.schema import Category
+from benchmark.schema import GENERIC_CATEGORIES
 
-REQUIRED_CATEGORIES = {c.value for c in Category}
+REQUIRED_CATEGORIES = set(GENERIC_CATEGORIES)
 
 
 def test_exactly_67_samples():
@@ -59,7 +59,24 @@ def test_validator_rejects_unknown_category():
     bad = copy.deepcopy(build_all_samples())
     bad[0]["category"] = "not_a_category"
     with pytest.raises(SampleValidationError):
+        validate_samples(bad, allowed_categories=GENERIC_CATEGORIES)
+
+
+def test_validator_rejects_malformed_category():
+    bad = copy.deepcopy(build_all_samples())
+    bad[0]["category"] = "Not A Category"
+    with pytest.raises(SampleValidationError):
         validate_samples(bad)
+
+
+def test_combined_file_enforces_declared_categories(tmp_path):
+    import json
+    combined = generate_sample_files(tmp_path / "benchmark_samples")
+    data = json.loads(combined.read_text())
+    data["samples"][0]["category"] = "not_a_category"
+    combined.write_text(json.dumps(data))
+    with pytest.raises(SampleValidationError, match="not one of"):
+        load_benchmark_file(combined)
 
 
 def test_validator_rejects_missing_prompt():

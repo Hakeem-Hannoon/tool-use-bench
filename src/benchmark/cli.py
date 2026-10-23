@@ -126,7 +126,7 @@ def validate_samples_cmd(
         )
     by_category: dict[str, int] = {}
     for s in samples:
-        by_category[s.category.value] = by_category.get(s.category.value, 0) + 1
+        by_category[s.category] = by_category.get(s.category, 0) + 1
     console.print(f"[green]OK[/green] — {len(samples)} valid samples")
     for category, count in sorted(by_category.items()):
         console.print(f"  {category}: {count}")

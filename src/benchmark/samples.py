@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from . import BENCHMARK_NAME, __version__
-from .schema import Sample
+from .schema import GENERIC_CATEGORIES, Sample
 from .tool_schemas import ALL_TOOLS
 from .utils.hashing import sha256_of_json
 from .utils.json_utils import atomic_write_json, load_json_file
@@ -907,11 +907,19 @@ class SampleValidationError(ValueError):
     """Raised when any sample fails schema validation."""
 
 
-def validate_samples(raw_samples: list[dict[str, Any]]) -> list[Sample]:
-    """Validate raw sample dicts. Raises before any API call on failure."""
+def validate_samples(raw_samples: list[dict[str, Any]], *,
+                     allowed_categories: tuple[str, ...] | list[str] | None = None,
+                     ) -> list[Sample]:
+    """Validate raw sample dicts. Raises before any API call on failure.
+
+    ``allowed_categories`` restricts sample categories to a suite's declared
+    set (the combined benchmark file's ``categories``); ``None`` accepts any
+    snake_case category.
+    """
     errors: list[str] = []
     validated: list[Sample] = []
     seen_ids: set[str] = set()
+    allowed = set(allowed_categories) if allowed_categories is not None else None
     for i, raw in enumerate(raw_samples):
         label = raw.get("id", f"<index {i}>") if isinstance(raw, dict) else f"<index {i}>"
         try:
@@ -919,6 +927,12 @@ def validate_samples(raw_samples: list[dict[str, Any]]) -> list[Sample]:
             sample.validate_expected_calls_reference_known_tools()
         except Exception as exc:  # pydantic ValidationError or ValueError
             errors.append(f"sample {label}: {exc}")
+            continue
+        if allowed is not None and sample.category not in allowed:
+            errors.append(
+                f"sample {sample.id}: category {sample.category!r} is not one "
+                f"of this suite's categories {sorted(allowed)}"
+            )
             continue
         if sample.id in seen_ids:
             errors.append(f"sample {sample.id}: duplicate id")
@@ -940,7 +954,7 @@ def generate_sample_files(base_dir: str | Path = "benchmark_samples") -> Path:
     """
     base = Path(base_dir)
     samples = build_all_samples()
-    validate_samples(samples)  # never write invalid samples
+    validate_samples(samples, allowed_categories=GENERIC_CATEGORIES)
     if len(samples) != EXPECTED_SAMPLE_COUNT:
         raise SampleValidationError(
             f"expected {EXPECTED_SAMPLE_COUNT} samples, built {len(samples)}"
@@ -951,8 +965,10 @@ def generate_sample_files(base_dir: str | Path = "benchmark_samples") -> Path:
         atomic_write_json(sample_dir / f"{sample['id']}.json", sample)
     combined = {
         "benchmark": BENCHMARK_NAME,
+        "suite": "generic",
         "version": __version__,
         "sample_count": len(samples),
+        "categories": list(GENERIC_CATEGORIES),
         "samples": samples,
     }
     combined_path = base / FULL_BENCHMARK_FILENAME
@@ -966,13 +982,27 @@ def load_benchmark_file(path: str | Path) -> list[Sample]:
     Accepts either embedded sample objects or relative-path string references
     in the ``samples`` array (resolved against the benchmark file's directory).
     A bare top-level array of samples is also accepted.
+
+    Optional top-level keys:
+
+    * ``categories`` — the suite's allowed categories (enforced).
+    * ``prompts`` — a table of named system prompts. A sample's
+      ``system_prompt_refs`` (``{protocol: prompt_id}``) is resolved against it
+      into ``system_prompt_by_protocol`` *before* validation, so the sample
+      hash covers the prompt text and a prompt edit starts a fresh checkpoint.
     """
     path = Path(path)
     data = load_json_file(path)
+    categories: list[str] | None = None
+    prompts: dict[str, str] = {}
     if isinstance(data, list):
         raw_list = data
     elif isinstance(data, dict) and isinstance(data.get("samples"), list):
         raw_list = data["samples"]
+        if isinstance(data.get("categories"), list):
+            categories = data["categories"]
+        if isinstance(data.get("prompts"), dict):
+            prompts = data["prompts"]
     else:
         raise SampleValidationError(
             f"{path}: expected an object with a 'samples' array "
@@ -990,7 +1020,28 @@ def load_benchmark_file(path: str | Path) -> list[Sample]:
                 f"{path}: sample entries must be objects or path strings, "
                 f"got {type(entry).__name__}"
             )
-    return validate_samples(resolved)
+    for raw in resolved:
+        _resolve_prompt_refs(raw, prompts, path)
+    return validate_samples(resolved, allowed_categories=categories)
+
+
+def _resolve_prompt_refs(raw: dict[str, Any], prompts: dict[str, str],
+                         path: Path) -> None:
+    refs = raw.pop("system_prompt_refs", None)
+    if not refs:
+        return
+    if not isinstance(refs, dict):
+        raise SampleValidationError(
+            f"{path}: sample {raw.get('id')}: system_prompt_refs must map "
+            f"protocol -> prompt id")
+    by_protocol = dict(raw.get("system_prompt_by_protocol") or {})
+    for protocol, prompt_id in refs.items():
+        if prompt_id not in prompts:
+            raise SampleValidationError(
+                f"{path}: sample {raw.get('id')}: unknown prompt id "
+                f"{prompt_id!r} (file defines {sorted(prompts)})")
+        by_protocol[protocol] = prompts[prompt_id]
+    raw["system_prompt_by_protocol"] = by_protocol
 
 
 def samples_hash(samples: list[Sample]) -> str:

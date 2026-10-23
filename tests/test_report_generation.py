@@ -81,7 +81,7 @@ def test_model_summaries_have_correct_totals():
 def test_category_and_sample_summaries_cover_all_records():
     config, samples, doc = build_doc()
     assert {c["category"] for c in doc["category_summaries"]} == \
-        {s.category.value for s in samples}
+        {s.category for s in samples}
     assert {p["sample_id"] for p in doc["sample_summaries"]} == \
         {s.id for s in samples}
     for entry in doc["sample_summaries"]:

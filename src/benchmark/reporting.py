@@ -131,14 +131,14 @@ def build_results_document(
         model_records = [r for r in records
                         if (r.model, r.provider) == model_key]
         categories = sorted({
-            sample_by_id[r.sample_id].category.value
+            sample_by_id[r.sample_id].category
             for r in model_records if r.sample_id in sample_by_id
         })
         for category in categories:
             cat_records = [
                 r for r in model_records
                 if r.sample_id in sample_by_id
-                and sample_by_id[r.sample_id].category.value == category
+                and sample_by_id[r.sample_id].category == category
             ]
             wins = sum(1 for r in cat_records if r.success)
             rate, percent = rate_and_percent(wins, len(cat_records))
@@ -159,7 +159,7 @@ def build_results_document(
             sample_summaries.append({
                 **_model_label(model_key),
                 "sample_id": sid,
-                "category": sample.category.value if sample else "unknown",
+                "category": sample.category if sample else "unknown",
                 "difficulty": sample.difficulty.value if sample else "unknown",
                 "successful_runs": wins,
                 "failed_runs": len(sample_runs) - wins,
