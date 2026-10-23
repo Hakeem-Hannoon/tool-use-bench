@@ -1,7 +1,17 @@
 {
   "benchmark": "tool-call-bench",
-  "version": "0.1.0",
+  "suite": "generic",
+  "version": "0.2.0",
   "sample_count": 67,
+  "categories": [
+    "single_tool",
+    "multi_tool",
+    "parallel_tools",
+    "no_tool_decoy",
+    "argument_precision",
+    "ordering_required",
+    "tool_choice_under_ambiguity"
+  ],
   "samples": [
     {
       "id": "0001_weather_current",
