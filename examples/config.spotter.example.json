@@ -1,0 +1,48 @@
+{
+  "benchmark": "benchmark_samples/spotter_benchmark.json",
+  "output": "outputs/spotter/results.json",
+  "report": "reports/spotter_report.md",
+  "runs_per_sample": 5,
+  "concurrency": 4,
+  "temperature": 0.5,
+  "max_retries": 3,
+  "timeout_seconds": 180,
+  "allow_text_tool_call_fallback": false,
+  "resume": true,
+  "force": false,
+  "seed": 12345,
+  "save_raw_responses": true,
+  "reliability_bar": 0.95,
+  "models": [
+    {
+      "label": "grok-4-1-fast · router (production)",
+      "name": "grok-4-1-fast-non-reasoning",
+      "provider": "openai_compatible",
+      "protocol": "spotter_router",
+      "api_key_env": "AZURE_FOUNDRY_API_KEY",
+      "endpoint_env": "AZURE_FOUNDRY_ENDPOINT",
+      "pricing": {"input_per_mtok": 0.20, "cached_input_per_mtok": 0.05, "output_per_mtok": 0.50},
+      "api_params": {}
+    },
+    {
+      "label": "grok-4-1-fast · native tools",
+      "name": "grok-4-1-fast-non-reasoning",
+      "provider": "openai_compatible",
+      "protocol": "native",
+      "api_key_env": "AZURE_FOUNDRY_API_KEY",
+      "endpoint_env": "AZURE_FOUNDRY_ENDPOINT",
+      "pricing": {"input_per_mtok": 0.20, "cached_input_per_mtok": 0.05, "output_per_mtok": 0.50},
+      "api_params": {}
+    },
+    {
+      "label": "grok-4-1-fast reasoning · router (thinking toggle)",
+      "name": "grok-4-1-fast-reasoning",
+      "provider": "openai_compatible",
+      "protocol": "spotter_router",
+      "api_key_env": "AZURE_FOUNDRY_API_KEY",
+      "endpoint_env": "AZURE_FOUNDRY_ENDPOINT",
+      "pricing": {"input_per_mtok": 0.20, "cached_input_per_mtok": 0.05, "output_per_mtok": 0.50},
+      "api_params": {"temperature": null, "response_format": null}
+    }
+  ]
+}

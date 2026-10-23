@@ -273,3 +273,18 @@ async def test_native_calls_win_over_fallback_parsing():
 
 if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__, "-v"])
+
+
+def test_gemini_strips_zod_keywords_but_keeps_property_names():
+    from benchmark.providers.gemini_provider import _strip_unsupported_schema_keys
+    schema = {"type": "object", "additionalProperties": False, "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "when": {"type": "string", "format": "date-time"},
+        "n": {"type": "integer", "exclusiveMinimum": 0, "default": 1},
+        "default": {"type": "string"}}}
+    out = _strip_unsupported_schema_keys(schema)
+    assert out == {"type": "object", "properties": {
+        "id": {"type": "string"},
+        "when": {"type": "string", "format": "date-time"},
+        "n": {"type": "integer"},
+        "default": {"type": "string"}}}

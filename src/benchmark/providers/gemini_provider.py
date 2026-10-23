@@ -13,15 +13,29 @@ from ..utils.env import require_env
 from .base import BaseProvider, Conversation, NativeCall, StepOutput, safe_dump
 
 
+_GEMINI_UNSUPPORTED_KEYS = ("additionalProperties", "$schema", "default",
+                            "exclusiveMinimum", "exclusiveMaximum")
+_GEMINI_STRING_FORMATS = ("enum", "date-time")
+
+
 def _strip_unsupported_schema_keys(schema: Any) -> Any:
-    """Gemini function declarations reject some JSON Schema keywords
-    (notably ``additionalProperties``); strip them recursively."""
+    """Gemini function declarations accept an OpenAPI subset of JSON Schema.
+    Strip keywords it rejects (``additionalProperties``, ``default``,
+    exclusive bounds, and string formats other than enum/date-time — which
+    Zod-generated schemas such as Spotter's use freely) recursively."""
     if isinstance(schema, dict):
-        return {
-            k: _strip_unsupported_schema_keys(v)
-            for k, v in schema.items()
-            if k not in ("additionalProperties", "$schema")
-        }
+        out = {}
+        for k, v in schema.items():
+            if k in _GEMINI_UNSUPPORTED_KEYS:
+                continue
+            if k == "format" and v not in _GEMINI_STRING_FORMATS:
+                continue
+            # Under "properties" the keys are argument names, not keywords.
+            out[k] = ({name: _strip_unsupported_schema_keys(sub)
+                       for name, sub in v.items()}
+                      if k == "properties" and isinstance(v, dict)
+                      else _strip_unsupported_schema_keys(v))
+        return out
     if isinstance(schema, list):
         return [_strip_unsupported_schema_keys(v) for v in schema]
     return schema
