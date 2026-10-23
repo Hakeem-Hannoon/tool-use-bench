@@ -206,3 +206,43 @@ def test_protocol_error_fails_run_even_with_no_expected_calls():
     result = score_tool_calls([], [], cfg(), protocol_error="invalid JSON envelope")
     assert not result.success
     assert classify_failure(result).value == "protocol_error"
+
+
+# ------------------------------------------------- alternatives and arrays
+
+from benchmark.schema import ExpectedToolCall  # noqa: E402
+
+
+def test_alternatives_accept_any_listed_read_tool():
+    expected = [ExpectedToolCall(name="get_exercise_history", alternatives=[
+        ToolCall(name="search_workouts"), ToolCall(name="get_recent_workouts")])]
+    for name in ("get_exercise_history", "search_workouts", "get_recent_workouts"):
+        assert score_tool_calls(expected, [call(name, x=1)],
+                                cfg(require_exact_arguments=False)).success
+    result = score_tool_calls(expected, [call("show_table")], cfg())
+    assert not result.success and result.wrong_tool_calls
+
+
+def test_alternatives_accept_a_second_argument_shape():
+    expected = [ExpectedToolCall(
+        name="body_metric", arguments={"bodyweight": 182},
+        alternatives=[ToolCall(name="body_metric",
+                               arguments={"entries": [{"bodyweight": 182}]})])]
+    mode = cfg(require_exact_arguments=False)
+    assert score_tool_calls(expected, [call("body_metric", bodyweight=182)], mode).success
+    assert score_tool_calls(expected, [call("body_metric",
+                                            entries=[{"bodyweight": 182}])], mode).success
+    bad = score_tool_calls(expected, [call("body_metric", bodyweight=128)], mode)
+    assert not bad.success and bad.argument_errors[0].argument_path == "bodyweight"
+
+
+def test_unordered_and_includes_array_matchers():
+    spec = {"$unordered": [{"setId": "a", "weight": 195}, {"setId": "b", "weight": 195}]}
+    mode = cfg(require_exact_arguments=False)
+    ok = [{"setId": "b", "weight": 195}, {"setId": "a", "weight": 195, "weightUnit": "lb"}]
+    assert score_tool_calls([call("e", u=spec)], [call("e", u=ok)], mode).success
+    assert not score_tool_calls([call("e", u=spec)], [call("e", u=ok[:1])], mode).success
+    inc = {"$includes": [{"$regex": "(?i)face ?pulls?"}]}
+    assert score_tool_calls([call("p", ex=inc)],
+                            [call("p", ex=["Row", "Face Pulls", "Curl"])], mode).success
+    assert not score_tool_calls([call("p", ex=inc)], [call("p", ex=["Row"])], mode).success

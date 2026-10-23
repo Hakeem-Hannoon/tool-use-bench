@@ -87,6 +87,17 @@ class ToolCall(BaseModel):
     arguments: dict[str, Any] = Field(default_factory=dict)
 
 
+class ExpectedToolCall(ToolCall):
+    """An expected call. ``alternatives`` lists other (name, arguments) pairs
+    that satisfy the same expectation — e.g. any of several read tools, or
+    two accepted argument shapes for one tool."""
+
+    alternatives: list[ToolCall] = Field(default_factory=list)
+
+    def variants(self) -> list[ToolCall]:
+        return [self, *self.alternatives]
+
+
 class ScoringConfig(BaseModel):
     """Per-sample switches controlling how strictly the scorer compares calls."""
 
@@ -135,7 +146,7 @@ class Sample(BaseModel):
     #: contract); otherwise ``system_prompt`` / the default prompt is used.
     system_prompt_by_protocol: dict[str, str] = Field(default_factory=dict)
     tools: list[ToolDef]
-    expected_tool_calls: list[ToolCall]
+    expected_tool_calls: list[ExpectedToolCall]
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
     #: Steps the model may take. 1 = a single response (the classic
     #: single-turn sample). >1 runs an episode: non-terminal calls get a
@@ -173,6 +184,9 @@ class Sample(BaseModel):
         for i, call in enumerate(self.expected_tool_calls):
             problems += [f"expected_tool_calls[{i}].{p}"
                          for p in validate_matchers(call.arguments)]
+            for j, alt in enumerate(call.alternatives):
+                problems += [f"expected_tool_calls[{i}].alternatives[{j}].{p}"
+                             for p in validate_matchers(alt.arguments)]
         for i, mock in enumerate(self.tool_results):
             problems += [f"tool_results[{i}].when.{p}"
                          for p in validate_matchers(mock.when)]
@@ -190,7 +204,8 @@ class Sample(BaseModel):
         """Fail fast if the sample names a tool it doesn't offer."""
         offered = self.tool_names()
         references = (
-            [("expected tool call", c.name) for c in self.expected_tool_calls]
+            [("expected tool call", v.name) for c in self.expected_tool_calls
+             for v in c.variants()]
             + [("allowed extra tool", n) for n in self.scoring.allowed_extra_tools]
             + [("terminal tool", n) for n in self.terminal_tools]
             + [("mock tool result", m.tool) for m in self.tool_results]
@@ -337,7 +352,7 @@ class RunRecord(BaseModel):
     sample_id: str
     run_index: int
     success: bool
-    expected_tool_calls: list[ToolCall]
+    expected_tool_calls: list[ExpectedToolCall]
     actual_tool_calls: list[ToolCall]
     raw_model_output: Any = None
     text_output: str = ""
@@ -353,3 +368,12 @@ class RunRecord(BaseModel):
     step_count: int = 0
     recoveries: int = 0
     steps: list[EpisodeStep] = Field(default_factory=list)
+
+    @field_validator("expected_tool_calls", mode="before")
+    @classmethod
+    def _accept_plain_tool_calls(cls, v: Any) -> Any:
+        """Plain ToolCall objects are valid expectations (no alternatives)."""
+        if isinstance(v, list):
+            return [c.model_dump() if isinstance(c, ToolCall)
+                    and not isinstance(c, ExpectedToolCall) else c for c in v]
+        return v

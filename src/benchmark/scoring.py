@@ -38,6 +38,7 @@ from typing import Any, Callable
 
 from .schema import (
     ArgumentError,
+    ExpectedToolCall,
     FailureType,
     SchemaError,
     ScoringConfig,
@@ -62,8 +63,10 @@ from .schema import (
 #: ``{"$one_of": [v1, v2]}``      matches any alternative (alternatives may be
 #:                                 matchers)
 #: ``{"$range": [lo, hi]}``       number with lo <= x <= hi (null = unbounded)
+#: ``{"$unordered": [v1, v2]}``   array with exactly these items in any order
+#: ``{"$includes": [v1, v2]}``    array containing (at least) these items
 MATCHER_OPS = ("$any", "$absent", "$optional", "$ci", "$contains", "$regex",
-               "$one_of", "$range")
+               "$one_of", "$range", "$unordered", "$includes")
 
 
 def is_matcher(value: Any) -> bool:
@@ -97,9 +100,10 @@ def validate_matchers(value: Any, path: str = "") -> list[str]:
                     re.compile(arg)
                 except re.error as exc:
                     problems.append(f"{where}: bad $regex: {exc}")
-        elif op == "$one_of":
-            if not isinstance(arg, list) or not arg:
-                problems.append(f"{where}: $one_of needs a non-empty list")
+        elif op in ("$one_of", "$unordered", "$includes"):
+            if not isinstance(arg, list) or (op == "$one_of" and not arg):
+                problems.append(f"{where}: {op} needs a "
+                                f"{'non-empty ' if op == '$one_of' else ''}list")
             else:
                 for i, alt in enumerate(arg):
                     problems.extend(validate_matchers(alt, f"{where}|{i}"))
@@ -264,6 +268,19 @@ class _Matcher:
                     return True
             self._err(errors, path, "wrong_value", spec, actual)
             return False
+        if op in ("$unordered", "$includes"):
+            if not isinstance(actual, list):
+                self._err(errors, path, "type_mismatch", spec, actual)
+                return False
+            if op == "$unordered" and len(actual) != len(arg):
+                self._err(errors, path, "wrong_value", spec, actual)
+                return False
+            pairs = _bipartite(len(arg), len(actual),
+                               lambda i, j: self.value(arg[i], actual[j], path, []))
+            if len(pairs) == len(arg):
+                return True
+            self._err(errors, path, "wrong_value", spec, actual)
+            return False
         if op == "$range":
             lo, hi = arg
             ok = (_json_type(actual) == "number"
@@ -310,6 +327,27 @@ def _names_match(expected: str, actual: str, cfg: ScoringConfig) -> bool:
     if cfg.require_exact_tool_names:
         return expected == actual
     return expected.lower() == actual.lower()
+
+
+def _variants(expected: ToolCall) -> list[ToolCall]:
+    if isinstance(expected, ExpectedToolCall):
+        return expected.variants()
+    return [expected]
+
+
+def _call_matches(expected: ToolCall, actual: ToolCall,
+                  cfg: ScoringConfig) -> bool:
+    """The actual call satisfies the expectation or one of its alternatives."""
+    return any(_names_match(v.name, actual.name, cfg)
+               and _arguments_match(v, actual, cfg)
+               for v in _variants(expected))
+
+
+def _name_variant(expected: ToolCall, actual: ToolCall,
+                  cfg: ScoringConfig) -> ToolCall | None:
+    """The expectation variant naming the same tool as ``actual``, if any."""
+    return next((v for v in _variants(expected)
+                 if _names_match(v.name, actual.name, cfg)), None)
 
 
 # ---------------------------------------------------------------------------
@@ -457,16 +495,15 @@ def _finalize(missing: list[str], wrong: list[WrongToolCall],
     )
 
 
-def _max_matching(expected: list[ToolCall], actual: list[ToolCall],
-                  ok: Callable[[int, int], bool]) -> dict[int, int]:
-    """Maximum bipartite matching expected→actual (Kuhn's algorithm).
+def _bipartite(n_left: int, n_right: int,
+               ok: Callable[[int, int], bool]) -> dict[int, int]:
+    """Maximum bipartite matching left→right (Kuhn's algorithm).
 
-    Call lists are tiny, so the O(V·E) augmenting-path search is instant and
-    — unlike greedy first-fit — never strands a match another pairing could
-    have made.
+    Call lists and argument arrays are tiny, so the O(V·E) augmenting-path
+    search is instant and — unlike greedy first-fit — never strands a match
+    another pairing could have made.
     """
-    adj = [[j for j in range(len(actual)) if ok(i, j)]
-           for i in range(len(expected))]
+    adj = [[j for j in range(n_right) if ok(i, j)] for i in range(n_left)]
     owner: dict[int, int] = {}  # actual index -> expected index
 
     def augment(i: int, seen: set[int]) -> bool:
@@ -479,7 +516,7 @@ def _max_matching(expected: list[ToolCall], actual: list[ToolCall],
                 return True
         return False
 
-    for i in range(len(expected)):
+    for i in range(n_left):
         augment(i, set())
     return {i: j for j, i in owner.items()}
 
@@ -494,13 +531,14 @@ def _leftovers(expected: list[ToolCall], actual: list[ToolCall],
     for i in unmatched:
         exp = expected[i]
         hit = next((j for j, act in enumerate(actual)
-                    if j not in used and _names_match(exp.name, act.name, cfg)),
+                    if j not in used and _name_variant(exp, act, cfg) is not None),
                    None)
         if hit is None:
             still_missing.append(i)
             continue
         used.add(hit)
-        arg_errors.extend(compare_arguments(exp.name, exp.arguments,
+        variant = _name_variant(exp, actual[hit], cfg)
+        arg_errors.extend(compare_arguments(variant.name, variant.arguments,
                                             actual[hit].arguments, cfg))
 
     allowed = set(cfg.allowed_extra_tools)
@@ -526,11 +564,8 @@ def _leftovers(expected: list[ToolCall], actual: list[ToolCall],
 def _score_unordered(expected: list[ToolCall], actual: list[ToolCall],
                      cfg: ScoringConfig,
                      schema_errs: list[SchemaError]) -> ScoringResult:
-    pairs = _max_matching(
-        expected, actual,
-        lambda i, j: (_names_match(expected[i].name, actual[j].name, cfg)
-                      and _arguments_match(expected[i], actual[j], cfg)),
-    )
+    pairs = _bipartite(len(expected), len(actual),
+                       lambda i, j: _call_matches(expected[i], actual[j], cfg))
     used = set(pairs.values())
     unmatched = [i for i in range(len(expected)) if i not in pairs]
     missing, wrong, arg_errors, extras = _leftovers(
@@ -547,12 +582,8 @@ def _score_ordered(expected: list[ToolCall], actual: list[ToolCall],
     unmatched: list[int] = []
     pos = 0
     for i, exp in enumerate(expected):
-        hit = next(
-            (j for j in range(pos, len(actual))
-             if _names_match(exp.name, actual[j].name, cfg)
-             and _arguments_match(exp, actual[j], cfg)),
-            None,
-        )
+        hit = next((j for j in range(pos, len(actual))
+                    if _call_matches(exp, actual[j], cfg)), None)
         if hit is None:
             unmatched.append(i)
         else:
@@ -565,12 +596,8 @@ def _score_ordered(expected: list[ToolCall], actual: list[ToolCall],
     still: list[int] = []
     for i in unmatched:
         exp = expected[i]
-        anywhere = next(
-            (j for j, act in enumerate(actual)
-             if j not in used and _names_match(exp.name, act.name, cfg)
-             and _arguments_match(exp, act, cfg)),
-            None,
-        )
+        anywhere = next((j for j, act in enumerate(actual)
+                         if j not in used and _call_matches(exp, act, cfg)), None)
         if anywhere is None:
             still.append(i)
         else:
