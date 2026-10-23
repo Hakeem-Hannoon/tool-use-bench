@@ -1540,7 +1540,7 @@
       "write": true,
       "terminal": true,
       "description": "Propose logging one or more body metrics (weight, body fat, waist). To backfill past or multiple weigh-ins, pass entries: args = { entries: [{ measuredAt?(YYYY-MM-DD; omit for today), bodyweight?, bodyweightUnit?, bodyFatPercentage?, waist?, waistUnit?('in'|'cm' — always include with waist), notes? }] }. A single reading may be passed flat ({ bodyweight, ... }). Always set measuredAt for past dates. Requires confirmation.",
-      "zod_schema": "bodyMetricBatchSchema",
+      "zod_schema": "bodyMetricBatchSchema | bodyMetricSchema",
       "domains": [
         "general",
         "nutrition",
@@ -1635,11 +1635,84 @@
             },
             "minItems": 1,
             "maxItems": 60
+          },
+          "measuredAt": {
+            "type": "string"
+          },
+          "bodyweight": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bodyweightUnit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "lb",
+                  "kg"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "bodyFatPercentage": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waist": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "waistUnit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "in",
+                  "cm"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
-        "required": [
-          "entries"
-        ],
         "additionalProperties": false
       }
     },

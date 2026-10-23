@@ -214,3 +214,64 @@ async def test_runner_end_to_end_on_the_spotter_file(tmp_path, monkeypatch, samp
     assert summary["cost_per_run_usd"] is not None
     report = (tmp_path / "out" / "report.md").read_text()
     assert "## Workload Picks" in report and "id_grounded_edits" in report
+
+
+# ------------------------------------------------------------------ oracle
+#
+# Materialize every expectation into a concrete call (the answer a perfect
+# model would give) and check that it scores as a pass and that none of its
+# pinned values would be rejected by the Zod-derived schema. A sample that
+# fails here could never be passed by any model.
+
+REGEX_EXAMPLES = ["Bench Press", "Squat", "Deadlift", "Incline DB Press",
+                  "Treadmill", "StairMaster", "Stationary Bike", "Romanian Deadlift",
+                  "Face Pulls", "Pull", "Barbell Row", "2026-10-21", "2026-10-01",
+                  "2026-10-08", "2026-10-15"]
+
+
+def materialize(value):
+    from benchmark.scoring import is_matcher
+    if is_matcher(value):
+        op, arg = next(iter(value.items()))
+        if op == "$any":
+            return "anything"
+        if op == "$ci":
+            return arg
+        if op == "$contains":
+            return " ".join([arg] if isinstance(arg, str) else arg)
+        if op == "$regex":
+            return next(x for x in REGEX_EXAMPLES if re.fullmatch(arg, x))
+        if op == "$range":
+            lo, hi = arg
+            return lo if hi is None else hi if lo is None else (lo + hi) / 2
+        if op == "$one_of":
+            return materialize(arg[0])
+        if op in ("$unordered", "$includes"):
+            return [materialize(a) for a in arg]
+        if op == "$optional":
+            return materialize(arg)
+        raise AssertionError(op)
+    if isinstance(value, dict):
+        return {k: materialize(v) for k, v in value.items()
+                if not (isinstance(v, dict) and set(v) & {"$absent", "$optional"})}
+    if isinstance(value, list):
+        return [materialize(v) for v in value]
+    return value
+
+
+def test_every_expectation_is_satisfiable_and_schema_valid(samples):
+    from benchmark.schema import ToolCall
+    from benchmark.scoring import schema_errors_for, score_tool_calls
+    for s in samples.values():
+        calls = [ToolCall(name=c.name, arguments=materialize(c.arguments))
+                 for c in s.expected_tool_calls]
+        result = score_tool_calls(s.expected_tool_calls, calls,
+                                  s.scoring.model_copy(update={
+                                      "validate_arguments_schema": False}))
+        assert result.success, (s.id, result.reason)
+        schemas = s.tool_schemas()
+        for c in calls:
+            bad = [e for e in schema_errors_for(c, schemas[c.name])
+                   if "is a required property" not in e.message
+                   and not e.message.startswith("'anything'")]
+            assert not bad, (s.id, [(e.argument_path, e.message) for e in bad])

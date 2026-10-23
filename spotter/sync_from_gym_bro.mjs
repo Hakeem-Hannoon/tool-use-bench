@@ -112,8 +112,9 @@ const TOOL_SCHEMAS = {
   create_exercise_alias: "createAliasSchema",
   get_user_profile: "getUserProfileArgsSchema",
   update_user_profile: "updateProfileSchema",
-  // Accepts one reading or { entries: [...] }; the batch is the canonical shape.
-  create_pending_body_metric: "bodyMetricBatchSchema",
+  // dispatchTool accepts { entries: [...] } OR one flat reading (it wraps the
+  // flat form into a batch), so the exported schema merges both shapes.
+  create_pending_body_metric: ["bodyMetricBatchSchema", "bodyMetricSchema"],
   create_pending_plan: "agentPlanSchema",
   set_active_plan: "setActivePlanArgsSchema",
   create_pending_macro_log: "parsedMacroSchema",
@@ -290,8 +291,7 @@ const domainTools = Object.fromEntries(
   DOMAINS.map((d) => [d, [...mod.toolNamesForDomain(d)]]),
 );
 
-function jsonSchemaFor(toolName) {
-  const exportName = TOOL_SCHEMAS[toolName];
+function objectSchema(toolName, exportName) {
   const zodSchema = mod.schemas[exportName];
   if (!zodSchema || typeof zodSchema.safeParse !== "function") {
     throw new Error(`schemas.ts has no zod export ${exportName} (for ${toolName})`);
@@ -308,12 +308,25 @@ function jsonSchemaFor(toolName) {
   return schema;
 }
 
+function jsonSchemaFor(toolName) {
+  const exports = [TOOL_SCHEMAS[toolName]].flat();
+  if (exports.length === 1) return objectSchema(toolName, exports[0]);
+  // Several accepted shapes: one object whose properties are the union, with
+  // nothing required (each shape's own rules are enforced server-side).
+  const shapes = exports.map((e) => objectSchema(toolName, e));
+  return {
+    type: "object",
+    properties: Object.assign({}, ...shapes.map((s) => s.properties)),
+    additionalProperties: false,
+  };
+}
+
 const tools = catalog.map((t) => ({
   name: t.name,
   write: Boolean(t.write),
   terminal: !DATA_TOOLS.has(t.name),
   description: t.description,
-  zod_schema: TOOL_SCHEMAS[t.name],
+  zod_schema: [TOOL_SCHEMAS[t.name]].flat().join(" | "),
   domains: DOMAINS.filter((d) => domainTools[d].includes(t.name)),
   parameters: jsonSchemaFor(t.name),
 }));
