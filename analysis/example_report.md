@@ -1,5 +1,10 @@
 # Tool Call Benchmark Report
 
+> Illustrative report in the 0.1.0 layout. Reports from 0.2.0 also include
+> **Cost & Latency** and **Workload Picks** sections after the ranking, a
+> protocol column, and step traces for multi-step runs — see
+> [`report_schema.md`](report_schema.md).
+
 Generated UTC: 2026-07-04T00:00:00Z  
 Generated local: 2026-07-03T20:00:00-04:00  
 Git commit: abc1234  
