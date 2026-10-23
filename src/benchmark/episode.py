@@ -61,9 +61,33 @@ def mock_result(sample: Sample, call: ToolCall) -> Any:
     return MOCK_NOT_FOUND
 
 
-def serialize_result(value: Any) -> str:
-    """Compact JSON, like Spotter's JSON.stringify of a tool result."""
+#: Spotter caps every tool result it feeds back (MAX_TOOL_RESULT_CHARS in
+#: orchestrator.ts); the benchmark applies the same cap so a model never sees
+#: more than production would show it.
+MAX_TOOL_RESULT_CHARS = 6000
+_TRUNCATION_NOTE = ("Result truncated. Narrow the query (smaller limit, tighter "
+                    "date range, one exercise) and try again for full detail.")
+
+
+def _compact(value: Any) -> str:
     return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
+
+
+def serialize_result(value: Any) -> str:
+    """Compact JSON, capped like Spotter's serializeToolResult: an oversized
+    result becomes {truncated, note, preview} with the preview shrunk until
+    the whole message fits."""
+    full = _compact(value if value is not None else {})
+    if len(full) <= MAX_TOOL_RESULT_CHARS:
+        return full
+    keep = MAX_TOOL_RESULT_CHARS - 200
+    out = _compact({"truncated": True, "note": _TRUNCATION_NOTE,
+                    "preview": full[:keep]})
+    while len(out) > MAX_TOOL_RESULT_CHARS and keep > 0:
+        keep //= 2
+        out = _compact({"truncated": True, "note": _TRUNCATION_NOTE,
+                        "preview": full[:keep]})
+    return out
 
 
 def _arguments_of(envelope_arguments: Any) -> dict[str, Any]:

@@ -335,3 +335,14 @@ def test_model_key_distinguishes_protocol_and_label():
     assert a.key == "openai/fake-model"  # unchanged for existing configs
     assert len({a.key, b.key, c.key}) == 3
     assert b.display == "fake-model (spotter_router)" and c.display == "hot"
+
+
+def test_tool_results_are_capped_like_production():
+    from benchmark.episode import MAX_TOOL_RESULT_CHARS, serialize_result
+    small = {"a": 1}
+    assert serialize_result(small) == '{"a":1}'
+    big = {"rows": ['"quoted" text ' * 20 for _ in range(200)]}
+    out = serialize_result(big)
+    assert len(out) <= MAX_TOOL_RESULT_CHARS
+    data = json.loads(out)
+    assert data["truncated"] is True and data["preview"]
