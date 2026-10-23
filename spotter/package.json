@@ -1,0 +1,14 @@
+{
+  "name": "tool-call-bench-spotter-sync",
+  "private": true,
+  "description": "Exports Spotter's live tool catalog, Zod argument schemas, and system prompts into spotter/snapshot/ for the Spotter benchmark suite.",
+  "type": "module",
+  "scripts": {
+    "sync": "node sync_from_gym_bro.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5",
+    "zod": "3.25.76",
+    "zod-to-json-schema": "3.25.2"
+  }
+}

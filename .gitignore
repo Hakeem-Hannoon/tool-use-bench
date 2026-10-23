@@ -21,10 +21,14 @@ venv/
 .mypy_cache/
 .ruff_cache/
 
-# Benchmark outputs (generated per run)
-outputs/*.json
-outputs/checkpoints/*.json
-reports/*.md
+# Benchmark outputs (generated per run, including per-suite subfolders and
+# the append-only checkpoint log)
+outputs/**
+!outputs/.gitkeep
+!outputs/checkpoints/
+!outputs/checkpoints/.gitkeep
+reports/**
+!reports/.gitkeep
 !analysis/example_report.md
 
 # OS / editor
@@ -35,3 +39,6 @@ reports/*.md
 # Local-only files (not part of the published repo)
 .claude/settings.local.json
 instructions.txt
+
+# Spotter exporter dependencies
+spotter/node_modules/

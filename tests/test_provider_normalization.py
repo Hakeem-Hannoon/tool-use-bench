@@ -3,12 +3,14 @@ never against live SDKs."""
 
 import pytest
 
-from benchmark.config import ModelConfig
+from fakes import ScriptedProvider, model_cfg
+from fakes import native as fake_native, text as fake_text
+
 from benchmark.providers.anthropic_provider import (
     convert_tools_to_anthropic, extract_anthropic_tool_calls,
 )
 from benchmark.providers.base import (
-    BaseProvider, ProviderSettings, parse_tool_calls_from_text,
+    ProviderSettings, parse_tool_calls_from_text,
 )
 from benchmark.providers.gemini_provider import (
     convert_tools_to_gemini, extract_gemini_tool_calls,
@@ -233,15 +235,8 @@ def test_parse_tool_calls_from_plain_prose_is_empty():
     assert parse_tool_calls_from_text("I would call get_weather here.") == []
 
 
-class TextOnlyProvider(BaseProvider):
-    """Simulates a model that prints a JSON tool call instead of calling."""
-
-    name = "fake"
-
-    async def _call(self, prompt, system_prompt, tools):
-        text = ('```json\n{"name": "get_weather", "arguments": '
-                '{"location": "Toronto, Canada", "unit": "celsius"}}\n```')
-        return {"stub": True}, [], text
+TEXT_CALL = ('```json\n{"name": "get_weather", "arguments": '
+             '{"location": "Toronto, Canada", "unit": "celsius"}}\n```')
 
 
 def _weather_sample() -> Sample:
@@ -250,43 +245,45 @@ def _weather_sample() -> Sample:
     return Sample.model_validate(raw)
 
 
-def _model_cfg() -> ModelConfig:
-    return ModelConfig(name="fake-model", provider="openai",
-                       api_key_env=None)
-
-
 async def test_text_tool_call_fails_by_default():
-    provider = TextOnlyProvider(_model_cfg(), ProviderSettings(
-        allow_text_tool_call_fallback=False))
+    provider = ScriptedProvider(model_cfg(), ProviderSettings(
+        allow_text_tool_call_fallback=False), [fake_text(TEXT_CALL)])
     result = await provider.complete(_weather_sample(), 0, "")
     assert result.tool_calls == []  # strict: text JSON is not a tool call
 
 
 async def test_text_fallback_only_when_enabled():
-    provider = TextOnlyProvider(_model_cfg(), ProviderSettings(
-        allow_text_tool_call_fallback=True))
+    provider = ScriptedProvider(model_cfg(), ProviderSettings(
+        allow_text_tool_call_fallback=True), [fake_text(TEXT_CALL)])
     result = await provider.complete(_weather_sample(), 0, "")
     assert len(result.tool_calls) == 1
     assert result.tool_calls[0].name == "get_weather"
     assert result.tool_calls[0].arguments == WEATHER_ARGS
 
 
-def test_native_calls_win_over_fallback_parsing():
-    # When native calls exist, fallback parsing must not run at all —
-    # verified by the BaseProvider.complete implementation contract.
+async def test_native_calls_win_over_fallback_parsing():
     settings = ProviderSettings(allow_text_tool_call_fallback=True)
-
-    class NativeProvider(TextOnlyProvider):
-        async def _call(self, prompt, system_prompt, tools):
-            from benchmark.schema import ToolCall
-            return ({}, [ToolCall(name="native", arguments={})],
-                    '{"name": "text_call", "arguments": {}}')
-
-    import asyncio
-    provider = NativeProvider(_model_cfg(), settings)
-    result = asyncio.run(provider.complete(_weather_sample(), 0, ""))
+    provider = ScriptedProvider(model_cfg(), settings, [
+        fake_native(("native", {}), text='{"name": "text_call", "arguments": {}}'),
+    ])
+    result = await provider.complete(_weather_sample(), 0, "")
     assert [c.name for c in result.tool_calls] == ["native"]
 
 
 if __name__ == "__main__":  # pragma: no cover
     pytest.main([__file__, "-v"])
+
+
+def test_gemini_strips_zod_keywords_but_keeps_property_names():
+    from benchmark.providers.gemini_provider import _strip_unsupported_schema_keys
+    schema = {"type": "object", "additionalProperties": False, "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "when": {"type": "string", "format": "date-time"},
+        "n": {"type": "integer", "exclusiveMinimum": 0, "default": 1},
+        "default": {"type": "string"}}}
+    out = _strip_unsupported_schema_keys(schema)
+    assert out == {"type": "object", "properties": {
+        "id": {"type": "string"},
+        "when": {"type": "string", "format": "date-time"},
+        "n": {"type": "integer"},
+        "default": {"type": "string"}}}

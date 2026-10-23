@@ -13,7 +13,7 @@ class AzureOpenAIProvider(OpenAIChatFamilyProvider):
 
     def check_credentials(self) -> None:
         super().check_credentials()
-        if not self.cfg.endpoint:
+        if not self.endpoint():
             raise ValueError(
                 "azure_openai models require 'endpoint' "
                 "(https://YOUR_RESOURCE.openai.azure.com)"
@@ -25,7 +25,7 @@ class AzureOpenAIProvider(OpenAIChatFamilyProvider):
         api_key = require_env(self.cfg.api_key_env) if self.cfg.api_key_env else None
         return AsyncAzureOpenAI(
             api_key=api_key,
-            azure_endpoint=self.cfg.endpoint,
+            azure_endpoint=self.endpoint(),
             api_version=self.cfg.api_version or "2025-01-01-preview",
             max_retries=0,
         )

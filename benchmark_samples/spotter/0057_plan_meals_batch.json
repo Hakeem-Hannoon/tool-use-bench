@@ -1,0 +1,90 @@
+{
+  "id": "0057_plan_meals_batch",
+  "category": "nutrition",
+  "difficulty": "medium",
+  "prompt": "I just had breakfast and lunch from my meal plan",
+  "system_prompt_refs": {
+    "spotter_router": "nutrition.spotter_router",
+    "native": "nutrition.native"
+  },
+  "tool_refs": [
+    "get_user_profile",
+    "update_user_profile",
+    "remember",
+    "forget",
+    "control_rest_timer",
+    "show_table",
+    "create_pending_macro_log",
+    "get_macros_today",
+    "get_adaptive_targets",
+    "set_macro_goals",
+    "show_macro_summary",
+    "get_nutrition_profile",
+    "get_meal_plans",
+    "create_pending_meal_plan",
+    "lookup_nutrition",
+    "lookup_barcode",
+    "list_saved_meals",
+    "save_named_meal",
+    "log_saved_meal",
+    "log_plan_meal",
+    "delete_saved_meal",
+    "create_pending_body_metric",
+    "get_bodyweight_history"
+  ],
+  "expected_tool_calls": [
+    {
+      "name": "log_plan_meal",
+      "arguments": {
+        "mealNames": {
+          "$unordered": [
+            {
+              "$ci": "breakfast"
+            },
+            {
+              "$ci": "lunch"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": false,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true,
+    "allowed_extra_tools": [
+      "get_adaptive_targets",
+      "get_bodyweight_history",
+      "get_macros_today",
+      "get_meal_plans",
+      "get_nutrition_profile",
+      "get_user_profile",
+      "list_saved_meals",
+      "lookup_barcode",
+      "lookup_nutrition"
+    ],
+    "validate_arguments_schema": true
+  },
+  "max_steps": 8,
+  "terminal_tools": [
+    "update_user_profile",
+    "control_rest_timer",
+    "show_table",
+    "create_pending_macro_log",
+    "set_macro_goals",
+    "show_macro_summary",
+    "create_pending_meal_plan",
+    "save_named_meal",
+    "log_saved_meal",
+    "log_plan_meal",
+    "delete_saved_meal",
+    "create_pending_body_metric"
+  ],
+  "continue_after_terminal": false,
+  "tool_result_set": "fixture_user",
+  "notes": "[nutrition route] Every attested plan meal in ONE log_plan_meal call (mealNames)."
+}
