@@ -1,22 +1,27 @@
 """Provider abstraction.
 
-Every adapter turns a benchmark sample into one provider API call and
-normalizes the response into :class:`benchmark.schema.ProviderResult`.
-Only provider-native tool/function calls count as tool calls; JSON printed
-as text is ignored unless ``allow_text_tool_call_fallback`` is enabled.
+Every adapter exposes one model call as a conversation *step*: send the
+history, get back native tool calls, text, and token usage. The episode
+runner (:mod:`benchmark.episode`) drives steps — one for a classic
+single-turn sample, several when a sample feeds scripted tool results back —
+and normalizes everything into :class:`benchmark.schema.ProviderResult`.
+
+Only provider-native tool/function calls count as tool calls under the
+``native`` protocol; JSON printed as text is ignored unless
+``allow_text_tool_call_fallback`` is enabled. The ``spotter_router``
+protocol reads tool calls from a JSON envelope instead (see
+:mod:`benchmark.router`).
 """
 
 from __future__ import annotations
 
 import re
-import time
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from ..config import ModelConfig
-from ..schema import ProviderResult, Sample, ToolCall
-from ..utils.env import require_env
+from ..schema import ProviderResult, Sample, ToolCall, Usage
+from ..utils.env import get_env, require_env
 from ..utils.json_utils import try_parse_json
 
 
@@ -136,8 +141,42 @@ def parse_tool_calls_from_text(text: str) -> list[ToolCall]:
     return calls
 
 
-class BaseProvider(ABC):
-    """Common adapter interface. Subclasses implement one API call."""
+@dataclass
+class NativeCall:
+    """A tool call as the provider emitted it, with the id needed to answer it."""
+
+    id: str | None
+    name: str
+    arguments: dict[str, Any]
+    #: The provider's original argument payload (e.g. OpenAI's JSON string),
+    #: echoed back verbatim when the call is replayed in history.
+    raw_arguments: Any = None
+
+
+@dataclass
+class StepOutput:
+    """One model response."""
+
+    raw: Any
+    calls: list[NativeCall]
+    text: str
+    usage: Usage = field(default_factory=Usage)
+    #: Provider-private assistant message to append to history (keeps fields
+    #: such as Gemini thought signatures or Anthropic thinking blocks intact).
+    native: Any = None
+
+
+@dataclass
+class Conversation:
+    """Provider-native message history for one episode."""
+
+    system: str
+    messages: list[Any] = field(default_factory=list)
+
+
+class BaseProvider:
+    """Common adapter interface. Subclasses implement :meth:`step` and the
+    three message builders for their wire format."""
 
     name: str = "base"
 
@@ -149,9 +188,20 @@ class BaseProvider(ABC):
 
     def check_credentials(self) -> None:
         """Raise MissingCredentialError before any API call if credentials
-        are absent. Default: require ``api_key_env``."""
+        are absent. Default: require ``api_key_env`` (and ``endpoint_env``
+        when the endpoint comes from the environment)."""
         if self.cfg.api_key_env:
             require_env(self.cfg.api_key_env)
+        if self.cfg.endpoint_env and not self.cfg.endpoint:
+            require_env(self.cfg.endpoint_env)
+
+    def endpoint(self) -> str | None:
+        """The configured endpoint, or the value of ``endpoint_env``."""
+        if self.cfg.endpoint:
+            return self.cfg.endpoint
+        if self.cfg.endpoint_env:
+            return get_env(self.cfg.endpoint_env)
+        return None
 
     # -- request construction helpers ------------------------------------
 
@@ -169,36 +219,41 @@ class BaseProvider(ABC):
                 params[key] = value
         return params
 
-    # -- the call ---------------------------------------------------------
+    # -- conversation primitives (implemented per provider) --------------
 
-    @abstractmethod
-    async def _call(self, prompt: str, system_prompt: str,
-                    tools: list[dict[str, Any]]) -> tuple[Any, list[ToolCall], str]:
-        """Perform one provider API call.
+    def new_conversation(self, system: str, prompt: str) -> Conversation:
+        return Conversation(system=system, messages=[self.user_message(prompt)])
 
-        Returns ``(raw_response_dict, native_tool_calls, text)``. Must raise
-        (anything) on failure; the runner classifies and retries.
+    def user_message(self, text: str) -> Any:
+        raise NotImplementedError
+
+    def assistant_message(self, step: StepOutput) -> Any:
+        raise NotImplementedError
+
+    def tool_result_messages(self, step: StepOutput,
+                             results: list[tuple[NativeCall, str]]) -> list[Any]:
+        """Messages answering ``step``'s native calls with JSON payloads."""
+        raise NotImplementedError
+
+    async def step(self, conv: Conversation, tools: list[dict[str, Any]] | None,
+                   *, json_mode: bool = False) -> StepOutput:
+        """Perform one provider API call on ``conv``.
+
+        ``tools`` are OpenAI-style definitions (``None`` = send no tools, as
+        the router protocol does). ``json_mode`` requests a JSON-object
+        response where the provider supports it. Must raise (anything) on
+        failure; the runner classifies and retries.
         """
+        raise NotImplementedError
+
+    # -- the episode ------------------------------------------------------
 
     async def complete(self, sample: Sample, run_index: int,
                        system_prompt: str) -> ProviderResult:
-        tools = [t.model_dump(mode="json") for t in sample.tools]
-        started = time.monotonic()
-        raw, calls, text = await self._call(sample.prompt, system_prompt, tools)
-        latency_ms = int((time.monotonic() - started) * 1000)
-        if not calls and self.settings.allow_text_tool_call_fallback:
-            calls = parse_tool_calls_from_text(text)
-        return ProviderResult(
-            model=self.cfg.name,
-            provider=self.cfg.provider,
-            sample_id=sample.id,
-            run_index=run_index,
-            raw_response=raw,
-            tool_calls=calls,
-            text=text,
-            error=None,
-            latency_ms=latency_ms,
-        )
+        """Run one episode of ``sample`` and return the normalized result."""
+        from ..episode import run_episode  # avoid an import cycle
+
+        return await run_episode(self, sample, run_index, system_prompt)
 
 
 def safe_dump(response: Any) -> Any:

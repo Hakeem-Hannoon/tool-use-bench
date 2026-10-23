@@ -31,6 +31,9 @@ from .utils.time import local_now_iso, utc_now_iso
 log = get_logger(__name__)
 
 DEFAULT_SYSTEM_PROMPT_PATH = Path("prompts/default_system_prompt.txt")
+#: Fallback when the benchmark runs from another working directory.
+_REPO_SYSTEM_PROMPT_PATH = (Path(__file__).resolve().parents[2]
+                            / DEFAULT_SYSTEM_PROMPT_PATH)
 
 
 @dataclass(frozen=True)
@@ -41,22 +44,37 @@ class RunTask:
 
 
 def load_default_system_prompt(path: Path = DEFAULT_SYSTEM_PROMPT_PATH) -> str:
-    if path.exists():
-        return path.read_text(encoding="utf-8").strip()
+    """The generic default system prompt. Resolved from the working
+    directory first, then from the repository, so running from elsewhere
+    doesn't silently drop it."""
+    for candidate in (path, _REPO_SYSTEM_PROMPT_PATH):
+        if candidate.exists():
+            return candidate.read_text(encoding="utf-8").strip()
     return ""
 
 
 def _record_from_result(sample: Sample, result: ProviderResult,
-                        *, save_raw: bool) -> RunRecord:
+                        *, save_raw: bool,
+                        model_cfg: ModelConfig | None = None) -> RunRecord:
     scoring = score_tool_calls(
         sample.expected_tool_calls, result.tool_calls, sample.scoring,
         error=result.error, timed_out=result.timed_out,
+        protocol_error=result.protocol_error,
+        tool_schemas=sample.tool_schemas(),
     )
     failure = classify_failure(scoring, error=result.error,
                                timed_out=result.timed_out)
+    steps = result.steps if save_raw else [
+        s.model_copy(update={"raw_response": None}) for s in result.steps]
+    cost = None
+    if model_cfg is not None and model_cfg.pricing is not None:
+        cost = round(model_cfg.pricing.cost(result.usage), 8)
     return RunRecord(
         model=result.model,
         provider=result.provider,
+        model_key=model_cfg.key if model_cfg else "",
+        label=model_cfg.display if model_cfg else result.model,
+        protocol=model_cfg.protocol if model_cfg else "native",
         sample_id=sample.id,
         run_index=result.run_index,
         success=scoring.success,
@@ -69,6 +87,11 @@ def _record_from_result(sample: Sample, result: ProviderResult,
         error=result.error,
         timed_out=result.timed_out,
         failure_type=failure.value if failure else None,
+        usage=result.usage,
+        cost_usd=cost,
+        step_count=len(result.steps),
+        recoveries=result.recoveries,
+        steps=steps,
     )
 
 
@@ -226,7 +249,8 @@ async def run_benchmark(config_path: str, config: BenchmarkConfig, *,
             result = await _attempt_with_retries(provider, task,
                                                  system_prompt, config)
         record = _record_from_result(task.sample, result,
-                                     save_raw=config.save_raw_responses)
+                                     save_raw=config.save_raw_responses,
+                                     model_cfg=task.model_cfg)
         key = store.key_for(task.model_cfg.provider, task.model_cfg.key,
                             task.sample.id, task.run_index)
         async with checkpoint_lock:

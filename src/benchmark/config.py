@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .schema import PROTOCOLS, Usage
 from .utils.hashing import sha256_of_json
 from .utils.json_utils import load_json_file
 
@@ -21,6 +22,27 @@ SUPPORTED_PROVIDERS = (
 )
 
 
+class Pricing(BaseModel):
+    """USD per million tokens. ``cached_input_per_mtok`` applies to input
+    tokens the provider served from its prompt cache (defaults to the full
+    input rate when omitted)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    input_per_mtok: float = Field(ge=0)
+    output_per_mtok: float = Field(ge=0)
+    cached_input_per_mtok: float | None = Field(default=None, ge=0)
+
+    def cost(self, usage: Usage) -> float:
+        cached = min(usage.cached_input_tokens, usage.input_tokens)
+        cached_rate = (self.cached_input_per_mtok
+                       if self.cached_input_per_mtok is not None
+                       else self.input_per_mtok)
+        return ((usage.input_tokens - cached) * self.input_per_mtok
+                + cached * cached_rate
+                + usage.output_tokens * self.output_per_mtok) / 1_000_000
+
+
 class ModelConfig(BaseModel):
     """One model/provider pair to benchmark."""
 
@@ -28,8 +50,18 @@ class ModelConfig(BaseModel):
 
     name: str = Field(min_length=1)
     provider: str
+    #: Display name in reports; also distinguishes two entries that share a
+    #: model (e.g. the same deployment at two temperatures).
+    label: str | None = None
+    #: Tool protocol: "native" (provider tool calling) or "spotter_router"
+    #: (Spotter's JSON envelope; see benchmark.router).
+    protocol: str = "native"
     api_key_env: str | None = None
     endpoint: str | None = None
+    #: Read the endpoint from this environment variable instead (keeps
+    #: resource URLs such as an Azure Foundry endpoint out of the config).
+    endpoint_env: str | None = None
+    pricing: Pricing | None = None
     # Azure-specific
     deployment: str | None = None
     api_version: str | None = None
@@ -49,15 +81,35 @@ class ModelConfig(BaseModel):
             )
         return v
 
+    @field_validator("protocol")
+    @classmethod
+    def _protocol_supported(cls, v: str) -> str:
+        if v not in PROTOCOLS:
+            raise ValueError(f"unsupported protocol {v!r}; supported: {', '.join(PROTOCOLS)}")
+        return v
+
     @property
     def key(self) -> str:
-        """Stable identifier for this model entry (provider + name [+ endpoint])."""
+        """Stable identifier for this model entry: provider + name, plus
+        endpoint, deployment, a non-default protocol, and the label when set.
+        Entries without the newer fields keep their old keys."""
         parts = [self.provider, self.name]
         if self.endpoint:
             parts.append(self.endpoint)
+        elif self.endpoint_env:
+            parts.append(f"${self.endpoint_env}")
         if self.deployment:
             parts.append(self.deployment)
-        return "/".join(parts)
+        if self.protocol != "native":
+            parts.append(self.protocol)
+        key = "/".join(parts)
+        return f"{key}#{self.label}" if self.label else key
+
+    @property
+    def display(self) -> str:
+        if self.label:
+            return self.label
+        return self.name if self.protocol == "native" else f"{self.name} ({self.protocol})"
 
 
 class BenchmarkConfig(BaseModel):
@@ -78,6 +130,9 @@ class BenchmarkConfig(BaseModel):
     force: bool = False
     seed: int | None = 12345
     save_raw_responses: bool = True
+    #: Success rate a model must reach on a category to be eligible as that
+    #: workload's pick in the report's cost table.
+    reliability_bar: float = Field(default=0.95, ge=0, le=1)
     models: list[ModelConfig] = Field(min_length=1)
 
     @field_validator("models")
@@ -115,8 +170,8 @@ class BenchmarkConfig(BaseModel):
         """
         data = self.model_dump(mode="json")
         for model in data.get("models", []):
-            for field in ("api_key_env", "project_id_env", "location_env",
-                          "service_account_path_env"):
+            for field in ("api_key_env", "endpoint_env", "project_id_env",
+                          "location_env", "service_account_path_env"):
                 if model.get(field):
                     # keep the env var NAME (not a secret) — value never loaded here
                     model[field] = str(model[field])

@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from google import genai
 from google.genai import types as genai_types
 
-from ..schema import ToolCall
+from ..schema import ToolCall, Usage
 from ..utils.env import require_env
-from .base import BaseProvider, safe_dump
+from .base import BaseProvider, Conversation, NativeCall, StepOutput, safe_dump
 
 
 def _strip_unsupported_schema_keys(schema: Any) -> Any:
@@ -65,6 +66,34 @@ def extract_gemini_tool_calls(response: dict[str, Any]) -> tuple[list[ToolCall],
     return calls, "\n".join(p for p in text_parts if p)
 
 
+def extract_gemini_usage(response: dict[str, Any]) -> Usage:
+    """Thinking tokens are billed as output on Gemini, so they count there."""
+    meta = response.get("usage_metadata") or response.get("usageMetadata") or {}
+
+    def num(*keys: str) -> int:
+        for key in keys:
+            if meta.get(key) is not None:
+                return int(meta[key])
+        return 0
+
+    return Usage(
+        input_tokens=num("prompt_token_count", "promptTokenCount"),
+        output_tokens=num("candidates_token_count", "candidatesTokenCount")
+        + num("thoughts_token_count", "thoughtsTokenCount"),
+        cached_input_tokens=num("cached_content_token_count",
+                                "cachedContentTokenCount"),
+    )
+
+
+def _function_response_payload(payload: str) -> dict[str, Any]:
+    """FunctionResponse.response must be an object; wrap anything else."""
+    try:
+        value = json.loads(payload)
+    except (json.JSONDecodeError, TypeError):
+        value = payload
+    return value if isinstance(value, dict) else {"result": value}
+
+
 class GeminiProvider(BaseProvider):
     name = "gemini"
 
@@ -83,23 +112,52 @@ class GeminiProvider(BaseProvider):
             self._client = self._make_client()
         return self._client
 
-    async def _call(self, prompt: str, system_prompt: str,
-                    tools: list[dict[str, Any]]):
-        config_kwargs: dict[str, Any] = self.request_params(
-            temperature=self.settings.temperature,
-            tools=[genai_types.Tool(
-                function_declarations=convert_tools_to_gemini(tools))],
-        )
-        if system_prompt:
-            config_kwargs.setdefault("system_instruction", system_prompt)
+    # -- wire format ------------------------------------------------------
+
+    def user_message(self, text: str) -> Any:
+        return genai_types.Content(role="user", parts=[genai_types.Part(text=text)])
+
+    def assistant_message(self, step: StepOutput) -> Any:
+        # Replay the SDK's own Content so thought signatures survive.
+        if step.native is not None:
+            return step.native
+        return genai_types.Content(role="model",
+                                   parts=[genai_types.Part(text=step.text)])
+
+    def tool_result_messages(self, step: StepOutput,
+                             results: list[tuple[NativeCall, str]]) -> list[Any]:
+        return [genai_types.Content(role="user", parts=[
+            genai_types.Part.from_function_response(
+                name=call.name, response=_function_response_payload(payload))
+            for call, payload in results
+        ])]
+
+    async def step(self, conv: Conversation, tools: list[dict[str, Any]] | None,
+                   *, json_mode: bool = False) -> StepOutput:
+        base: dict[str, Any] = {"temperature": self.settings.temperature}
+        if tools:
+            base["tools"] = [genai_types.Tool(
+                function_declarations=convert_tools_to_gemini(tools))]
+        if json_mode:
+            base["response_mime_type"] = "application/json"
+        config_kwargs = self.request_params(**base)
+        if conv.system:
+            config_kwargs.setdefault("system_instruction", conv.system)
         if config_kwargs.get("temperature") is None:
             config_kwargs.pop("temperature", None)
         response = await self.client.aio.models.generate_content(
             model=self.cfg.name,
-            contents=prompt,
+            contents=conv.messages,
             config=genai_types.GenerateContentConfig(**config_kwargs),
         )
         raw = safe_dump(response)
-        calls, text = extract_gemini_tool_calls(
-            raw if isinstance(raw, dict) else {})
-        return raw, calls, text
+        raw_dict = raw if isinstance(raw, dict) else {}
+        calls, text = extract_gemini_tool_calls(raw_dict)
+        native_calls = [NativeCall(id=None, name=c.name, arguments=c.arguments)
+                        for c in calls]
+        native = None
+        candidates = getattr(response, "candidates", None) or []
+        if candidates and getattr(candidates[0], "content", None) is not None:
+            native = candidates[0].content
+        return StepOutput(raw=raw, calls=native_calls, text=text,
+                          usage=extract_gemini_usage(raw_dict), native=native)
