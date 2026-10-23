@@ -35,3 +35,6 @@ reports/*.md
 # Local-only files (not part of the published repo)
 .claude/settings.local.json
 instructions.txt
+
+# Spotter exporter dependencies
+spotter/node_modules/

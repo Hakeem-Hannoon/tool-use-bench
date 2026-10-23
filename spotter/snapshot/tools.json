@@ -1,0 +1,2732 @@
+{
+  "source": "Hakeem-Hannoon/gym-bro",
+  "gym_bro_commit": "1e7c9d6edcc25a9a4e3b5f016ca4bb50543f24ee",
+  "today": "2026-10-21",
+  "coach_mode": "gym_bro",
+  "fixture_profile": {
+    "displayName": "Alex",
+    "preferredWeightUnit": "lb",
+    "trainingGoal": "get stronger",
+    "equipmentAccess": "full gym",
+    "confirmBeforeLogging": true,
+    "humourLevel": 5,
+    "responseLength": "normal"
+  },
+  "tool_count": 42,
+  "domains": {
+    "general": [
+      "get_user_profile",
+      "update_user_profile",
+      "remember",
+      "forget",
+      "control_rest_timer",
+      "show_table",
+      "search_workouts",
+      "get_recent_workouts",
+      "get_exercise_history",
+      "get_progress_summary",
+      "get_bodyweight_history",
+      "plot_workout_data",
+      "find_exercise_videos",
+      "identify_equipment_from_image",
+      "show_workout_plan",
+      "show_saved_plan",
+      "create_pending_workout_session",
+      "log_planned_workout",
+      "create_pending_workout_edit",
+      "create_pending_workout_delete",
+      "create_pending_exercise_rename",
+      "create_exercise_alias",
+      "create_pending_body_metric",
+      "create_pending_plan",
+      "set_active_plan",
+      "get_workout_plan",
+      "get_progression_suggestions",
+      "create_pending_macro_log",
+      "get_macros_today",
+      "show_macro_summary",
+      "list_saved_meals",
+      "log_saved_meal",
+      "log_plan_meal"
+    ],
+    "nutrition": [
+      "get_user_profile",
+      "update_user_profile",
+      "remember",
+      "forget",
+      "control_rest_timer",
+      "show_table",
+      "create_pending_macro_log",
+      "get_macros_today",
+      "get_adaptive_targets",
+      "set_macro_goals",
+      "show_macro_summary",
+      "get_nutrition_profile",
+      "get_meal_plans",
+      "create_pending_meal_plan",
+      "lookup_nutrition",
+      "lookup_barcode",
+      "list_saved_meals",
+      "save_named_meal",
+      "log_saved_meal",
+      "log_plan_meal",
+      "delete_saved_meal",
+      "create_pending_body_metric",
+      "get_bodyweight_history"
+    ],
+    "compound": [
+      "get_user_profile",
+      "update_user_profile",
+      "remember",
+      "forget",
+      "control_rest_timer",
+      "show_table",
+      "search_workouts",
+      "get_recent_workouts",
+      "get_exercise_history",
+      "get_progress_summary",
+      "get_bodyweight_history",
+      "plot_workout_data",
+      "find_exercise_videos",
+      "identify_equipment_from_image",
+      "show_workout_plan",
+      "show_saved_plan",
+      "create_pending_workout_session",
+      "log_planned_workout",
+      "create_pending_workout_edit",
+      "create_pending_workout_delete",
+      "create_pending_exercise_rename",
+      "create_exercise_alias",
+      "create_pending_body_metric",
+      "create_pending_plan",
+      "set_active_plan",
+      "get_workout_plan",
+      "get_progression_suggestions",
+      "create_pending_macro_log",
+      "get_macros_today",
+      "show_macro_summary",
+      "list_saved_meals",
+      "log_saved_meal",
+      "log_plan_meal",
+      "get_adaptive_targets",
+      "set_macro_goals",
+      "get_nutrition_profile",
+      "get_meal_plans",
+      "create_pending_meal_plan",
+      "lookup_nutrition",
+      "lookup_barcode",
+      "save_named_meal",
+      "delete_saved_meal"
+    ]
+  },
+  "prompts": {
+    "general.spotter_router": "prompts/general.spotter_router.txt",
+    "general.native": "prompts/general.native.txt",
+    "nutrition.spotter_router": "prompts/nutrition.spotter_router.txt",
+    "nutrition.native": "prompts/nutrition.native.txt",
+    "compound.spotter_router": "prompts/compound.spotter_router.txt",
+    "compound.native": "prompts/compound.native.txt"
+  },
+  "tools": [
+    {
+      "name": "search_workouts",
+      "write": false,
+      "terminal": false,
+      "description": "Search workout history by free text, exercise name, muscle group, or date range (from/to as YYYY-MM-DD). Returns up to 25 workouts WITH workoutId, workoutExerciseId, and setId for each set; totalMatches is the full match count and returned is how many are included — narrow the search if totalMatches > returned.",
+      "zod_schema": "searchWorkoutsArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "exerciseName": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "muscleGroup": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "from": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 50
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_recent_workouts",
+      "write": false,
+      "terminal": false,
+      "description": "List the user's most recent workout sessions WITH workoutId, workoutExerciseId, and setId. arg: { limit }",
+      "zod_schema": "getRecentWorkoutsArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 50
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_exercise_history",
+      "write": false,
+      "terminal": false,
+      "description": "Full history for one exercise: best set, estimated 1RM trend, volume trend. arg: { exerciseName }",
+      "zod_schema": "getExerciseHistoryArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "exerciseName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "exerciseName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_progress_summary",
+      "write": false,
+      "terminal": false,
+      "description": "Weekly volume, streak, workout count, recent PRs. No args.",
+      "zod_schema": "getProgressSummaryArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_bodyweight_history",
+      "write": false,
+      "terminal": false,
+      "description": "Read the user's logged body weight over time — for weight questions/trends, or before plotting it. args = { days? } (default 365). Returns { weightUnit, count, points:[{ date, weight }] } oldest→newest. To draw a weight chart, use plot_workout_data with data['bodyweight'].",
+      "zod_schema": "getBodyweightHistoryArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3650
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "plot_workout_data",
+      "write": false,
+      "terminal": true,
+      "description": "Draw a chart from literal data points you already fetched with the read tools (get_exercise_history, get_bodyweight_history, search_workouts, ...). NO code — just data. args = { kind: 'line'|'bar', title?, caption?, xLabel?, yLabel?, series: [{ name?, points: [{ x, y }] }] } with 1-4 series of 1-400 points each; x is a label (e.g. a 'YYYY-MM-DD' date), y is a number in the user's unit. Example: { kind: 'line', title: 'Bench est. 1RM', yLabel: 'lb', series: [{ name: 'Bench', points: [{ x: '2026-05-01', y: 205 }, { x: '2026-05-15', y: 210 }] }] }. Only chart numbers you actually fetched — never invent points. The y-axis auto-pads so points aren't flush against the frame; pass yMin/yMax to frame it deliberately (e.g. a projection). Write `caption` in your persona voice.",
+      "zod_schema": "plotArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 600
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "line",
+              "bar"
+            ]
+          },
+          "xLabel": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "yLabel": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "yMin": {
+            "type": "number"
+          },
+          "yMax": {
+            "type": "number"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                "points": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 40
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ]
+                      },
+                      "y": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1,
+                  "maxItems": 400
+                }
+              },
+              "required": [
+                "points"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "kind",
+          "series"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "identify_equipment_from_image",
+      "write": false,
+      "terminal": true,
+      "description": "Identify a gym machine/exercise from an attached image. args: { imageUrl?, uploadedFileId?, question? } — pass the image's URL or its uploaded-file id.",
+      "zod_schema": "identifyEquipmentArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "uploadedFileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "find_exercise_videos",
+      "write": false,
+      "terminal": true,
+      "description": "Show real, ranked YouTube videos for ANY topic the user wants — call this WHENEVER they ask for videos, a demo, or to learn/fix something. args = { query, general?, intro? }. For exercises/form ('youtube videos for bench', 'show me how to squat', 'fix my deadlift form', or after identifying an exercise from a photo), pass the movement as `query` and leave `general` false — the app returns proper-form tutorials. For ANY non-fitness topic ('lofi study music', 'how to tie a tie', 'funny cat videos'), set general:true and pass the topic as `query`. Put a short persona-voiced line in `intro`; for off-topic asks make it playful and in-character (e.g. \"that won't make the weights lighter, but here are your videos:\"). NEVER write YouTube links or URLs yourself — you don't know real ones; always use this tool so the app fetches genuine videos.",
+      "zod_schema": "findExerciseVideosSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "general": {
+            "type": "boolean"
+          },
+          "intro": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "control_rest_timer",
+      "write": false,
+      "terminal": true,
+      "description": "Start, cancel, or change a rest/interval TIMER on the user's phone — it counts down in the app header and notifies them when it's up. Call this WHENEVER they ask to set/start a timer, time their rest, 'give me 3 minutes', stop/cancel the timer, or make it longer/shorter. args = { action:'start'|'cancel'|'edit', seconds?, label?, intro? }. Convert minutes → seconds ('3 min' → 180, '90 seconds' → 90). If they DON'T give a duration ('start a timer', 'time my rest'), still call it with action:'start' and NO seconds — the app uses their saved default rest time. 'cancel' takes no seconds. `label` is an optional short tag shown on the timer (e.g. 'Rest', 'Squats'). Keep `intro` VERY brief — a few words like 'Got it, timer going', never a long sentence. Only one timer runs at a time; starting another replaces it. The timer lives entirely on their device — never track time yourself; always use this tool.",
+      "zod_schema": "controlRestTimerSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "cancel",
+              "edit"
+            ]
+          },
+          "seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 86400
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "intro": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "remember",
+      "write": false,
+      "terminal": false,
+      "description": "Save ONE durable fact about the user so future coaching is personalized, categorized via kind into ONE of: 'health' (injuries, conditions, physical limitations), 'goal', 'training' (style/preferences), 'schedule', 'nutrition', 'equipment', 'family', 'friends', 'work', 'lifestyle', 'other' (default 'other'). args = { content, kind? }. Be SMART: skip facts already in your memory list (re-saving is auto-deduped). Use for lasting facts the user states about themselves. Health/injury info IS allowed (it makes coaching safe) — but NEVER store medications, mental-health specifics, exact body metrics, age, location, contact info, or facts about other people. Don't announce that you saved it.",
+      "zod_schema": "rememberSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "health",
+              "goal",
+              "training",
+              "schedule",
+              "nutrition",
+              "equipment",
+              "family",
+              "friends",
+              "work",
+              "lifestyle",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "forget",
+      "write": false,
+      "terminal": false,
+      "description": "Delete a memory that's outdated, wrong, or no longer true (a goal that changed, a preference they reversed, an injury that healed). args = { content } — pass the memory's text as shown in your memory list (the [Category] tag is optional). To UPDATE a fact, forget the old memory then remember the new one. Don't announce it.",
+      "zod_schema": "forgetSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 280
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_workout_plan",
+      "write": false,
+      "terminal": false,
+      "description": "Read the user's SAVED active workout plan/routine — call this WHENEVER they refer to their own plan: 'what does my plan say I should do today', 'what's on my plan this week', 'what's my Wednesday', or before editing it. No args. Returns { hasPlan, planId, name, planType, slots:[{ position, weekday, label, isRest, exercises:[{ name, sets, reps, note }] }] } (sets/reps null when the plan doesn't prescribe them; note is the user's own brief cue for that exercise, or null); for a weekly plan it also returns `today` (the slot for the current weekday) so you can answer 'today' directly. If hasPlan is false, tell them they have no plan yet and offer to build one (create_pending_plan). To just SHOW their plan, call show_saved_plan instead — it puts the stored plan on screen in one step. To EDIT their plan, read it here first, then call create_pending_plan with the returned planId.",
+      "zod_schema": "getWorkoutPlanArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_progression_suggestions",
+      "write": false,
+      "terminal": false,
+      "description": "Deterministic per-exercise progression proposals for TODAY'S plan day — call this whenever they ask what to lift, how heavy to go, whether to add weight, or 'what should I do today' with an active plan: 'what weight for bench', 'should I go up', 'am I stalling'. No args. Returns { hasPlan, weekday, label, isRest, exercises:[{ name, sets, reps, suggestion:{ kind:'start'|'increase'|'hold'|'deload'|'repeat', weight, weightUnit, sets, reps, rationale, lastTime, stalled } }] }. The numbers are computed from their real logged history (double progression: top-of-range on every set → add load; ~3 flat sessions → deload) — VOICE these numbers exactly, never invent your own, and use each suggestion's `rationale` as the explanation. If hasPlan is false or the day is rest, say so and offer alternatives.",
+      "zod_schema": "getWorkoutPlanArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_adaptive_targets",
+      "write": false,
+      "terminal": false,
+      "description": "Adaptive calorie-target check-in (MacroFactor-style): back-calculates the user's REAL expenditure from their logged intake + weight trend over ~3 weeks, then proposes a capped target adjustment toward their goal rate. Call when they ask 'should I eat more/less', 'why am I not losing', 'is my TDEE right', 'adjust my calories', or for a weekly check-in. args = { goalRatePerWeek? } (their desired weekly weight change in their preferred unit, negative = lose; omit to infer from their goal). Returns { ok, reason?, expenditureKcal, observedRatePerWeek, proposedTargetKcal, deltaKcal, rationale, goalRatePerWeek, weightUnit }. VOICE the returned numbers and rationale exactly — never invent your own. If ok=false, tell them what data is missing (the reason) and how to get it (log meals daily, weigh in a few times a week). To APPLY a proposed target, follow up with set_macro_goals (which still requires their confirmation).",
+      "zod_schema": "getAdaptiveTargetsArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "goalRatePerWeek": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": -3,
+                "maximum": 3
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "show_saved_plan",
+      "write": false,
+      "terminal": true,
+      "description": "SHOW the user's own saved plan on screen, straight from what is stored — use it for 'what's my workout today', 'show me Wednesday', 'what's my plan this week', 'show my split'. args = { day?: 'today' | 'tomorrow' | a weekday like 'wed' | a session letter/label for free plans | 'week' (default), intro? }. Put a one-line persona-voiced `intro`. One day renders as a workout table with its sets/reps and notes; the week renders as a day-by-day table. If it tells you the day is a rest day or there is no plan, say so in a sentence. Use get_workout_plan instead when you need the plan's data to answer a question or to edit it.",
+      "zod_schema": "showSavedPlanSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "intro": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "show_workout_plan",
+      "write": false,
+      "terminal": true,
+      "description": "Show ONE workout you're inventing now as a clean table card — a fresh ONE-OFF session ('give me a push day', 'plan my legs for today', 'quick 30-min upper'). To show a day of the user's SAVED plan use show_saved_plan instead. NOT a multi-day split, NOT a log. NEVER use this for PPL, upper/lower, full-body week, 'save as my plan', or any recurring routine — those need create_pending_plan with weekly/free slots. args = { title, focus?, durationEstimate?, intro?, note?, exercises:[{ name, sets?, reps?, note? }] }. Put a short persona-voiced line in `intro`. For cardio rows put time/intervals in `reps` (e.g. '20 min @ level 8'). This only displays one session — to SAVE a recurring routine use create_pending_plan; to LOG a finished workout use create_pending_workout_session. Don't dump a workout as prose; use this tool.",
+      "zod_schema": "sessionPlanSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "focus": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "durationEstimate": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "intro": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 280
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "sets": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 20
+                    },
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    }
+                  ]
+                },
+                "reps": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "note": {
+                  "type": "string",
+                  "maxLength": 160
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "title",
+          "exercises"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "show_table",
+      "write": false,
+      "terminal": true,
+      "description": "Show rows and columns as a clean table card — use it whenever you would otherwise list several comparable items in prose: the user's plan for the week (Day | Workout | Exercises), a logged session's sets (Exercise | Sets | Best set), recent workouts, PRs or est. 1RMs (Exercise | Best | Date), a day of eating (Meal | Foods | Protein | kcal — one row per meal, its foods comma-separated), or any side-by-side comparison. One row per group (meal, day, session): never repeat the same label down the first column. Only show data you fetched with a read tool or just proposed — never invent numbers. args = { title?, intro?, columns:[2-5 short headers], rows:[[one short cell per column]] (1-30 rows), note? }. Put a one-line persona-voiced `intro`. Display-only: it saves nothing. For ONE workout use show_workout_plan instead.",
+      "zod_schema": "showTableSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "intro": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24
+            },
+            "minItems": 2,
+            "maxItems": 5
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 60
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "minItems": 1,
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "columns",
+          "rows"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_workout_session",
+      "write": true,
+      "terminal": true,
+      "description": "Propose a NEW workout parsed from natural language. args = { title?, date?(YYYY-MM-DD), notes?, exercises:[{ name, sets:[{ weight?, weightUnit?, reps?, durationSeconds?, rpe?, setType? }] }] }. Requires confirmation. If that date already has the same exercise saved, this tool rejects the card and returns the existing setIds — call create_pending_workout_edit with those ids instead of logging a duplicate.",
+      "zod_schema": "parsedWorkoutSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "durationMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 1440
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "perceivedEffort": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "notes": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sets": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "setNumber": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0
+                      },
+                      "weight": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "weightUnit": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "lb",
+                              "kg"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "reps": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "durationSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "distance": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "distanceUnit": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "enum": [
+                              "mi",
+                              "km",
+                              "m"
+                            ]
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "speed": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "calories": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 100000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "rpe": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 10
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "rir": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 20
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "restSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "setType": {
+                        "type": "string",
+                        "enum": [
+                          "working",
+                          "warmup",
+                          "drop",
+                          "failure",
+                          "backoff"
+                        ],
+                        "default": "working"
+                      },
+                      "notes": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 500
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "minItems": 1,
+                  "maxItems": 50
+                }
+              },
+              "required": [
+                "name",
+                "sets"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 40
+          }
+        },
+        "required": [
+          "exercises"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "log_planned_workout",
+      "write": true,
+      "terminal": true,
+      "description": "Propose logging TODAY's planned workout when the user says they already did it and does not list sets ('I just did today's workout', 'finished today's session', 'log today's workout', 'I did my workout'). No args. Fills each planned exercise from the plan and uses the LAST logged working weight and reps (weight stays blank when that lift has never been logged). A rest day, no plan, or a plan with no weekday is a sentence or a question — never an invented workout, and never show_saved_plan in place of this. Requires confirmation. If it returns same_day_overlap, call create_pending_workout_edit with the workoutId and setIds from that result.",
+      "zod_schema": "getWorkoutPlanArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_workout_edit",
+      "write": true,
+      "terminal": true,
+      "description": "Propose edits to an existing workout. You must already know the workoutId and setId(s) from a read tool. args = { workoutId, summary, setUpdates?:[{ setId, weight?, reps?, ... }], sessionUpdates?:{ title?, workoutDate?, notes? } }. Requires confirmation.",
+      "zod_schema": "editWorkoutSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "workoutId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          },
+          "setUpdates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "setId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "weight": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "weightUnit": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "lb",
+                        "kg"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "reps": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "durationSeconds": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "distance": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "rpe": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 10
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "rir": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 20
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "setType": {
+                  "type": "string",
+                  "enum": [
+                    "working",
+                    "warmup",
+                    "drop",
+                    "failure",
+                    "backoff"
+                  ],
+                  "default": "working"
+                },
+                "notes": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "setId"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 50
+          },
+          "sessionUpdates": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "workoutDate": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "notes": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "location": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "durationMinutes": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 1440
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "perceivedEffort": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "workoutId",
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_workout_delete",
+      "write": true,
+      "terminal": true,
+      "description": "Propose deleting a workout/exercise/set, or ALL workouts. Use IDs from a read tool: target 'workout'→workoutId, 'exercise'→workoutExerciseId, 'set'→setId. To delete EVERY workout the user has, use target:'all' with NO targetId (no read/IDs needed). args = { target:'workout'|'exercise'|'set'|'all', targetId?, summary }. Requires confirmation.",
+      "zod_schema": "deleteWorkoutSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "workout",
+              "exercise",
+              "set",
+              "all"
+            ]
+          },
+          "targetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "required": [
+          "target",
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_exercise_rename",
+      "write": true,
+      "terminal": true,
+      "description": "Propose renaming an exercise or saving a preferred name. args = { exerciseId, newName }. Requires confirmation.",
+      "zod_schema": "renameExerciseSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "exerciseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "newName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "exerciseId",
+          "newName"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_exercise_alias",
+      "write": true,
+      "terminal": true,
+      "description": "Propose a personal alias mapping. args = { exerciseId, alias }. Requires confirmation.",
+      "zod_schema": "createAliasSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "exerciseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "exerciseId",
+          "alias"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_user_profile",
+      "write": false,
+      "terminal": false,
+      "description": "Read the user's current SETTINGS and profile — call this whenever they ask what a setting is ('what unit am I in', 'which coach is my default', 'are my notifications on', 'how long are your replies set to', 'do you ask before logging') or BEFORE changing a setting. No args. Returns { displayName, preferredWeightUnit, preferredDistanceUnit, trainingGoal, experienceLevel, injuries, equipmentAccess, defaultWorkoutDays, humourLevel(0-10), responseLength('brief'|'normal'|'long'), insightsEnabled, pushEnabled, confirmBeforeLogging, coachPersona, timezone }. Use this to answer setting questions and to avoid proposing a change to a value that's already set.",
+      "zod_schema": "getUserProfileArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "update_user_profile",
+      "write": true,
+      "terminal": true,
+      "description": "Propose changing the user's SETTINGS / profile when they ask ('switch me to kg', 'set my default coach to Goggins', 'turn off notifications', 'make your replies shorter', 'I train 4 days a week', 'I have a shoulder injury', 'stop asking me to confirm'). Pass ONLY the fields that change. args = { displayName?, preferredWeightUnit?('lb'|'kg'), preferredDistanceUnit?('mi'|'km'), trainingGoal?, experienceLevel?, injuries?, equipmentAccess?, defaultWorkoutDays?(0-7), humourLevel?(0-10, how playful you are), responseLength?('brief'|'normal'|'long'), insightsEnabled?(proactive insight chips + daily nudge), pushEnabled?(push notifications + daily nudge), coachPersona?('butterflies'|'gym_bro'|'coach'|'goggins'|'goe'|'mamacita' — their DEFAULT coach), confirmBeforeLogging?(boolean — whether the assistant asks for approval before logging/editing/deleting/changing anything) }. coachPersona/insightsEnabled/pushEnabled apply to the app going forward (next time they open it). Goggins and Mamacita are Pro-only personas. Only change confirmBeforeLogging when the user EXPLICITLY asks to turn confirmations on or off ('stop asking me to confirm', 'don't ask permission before logging', 'always confirm before you log', 'turn confirmation back on') — never as a side effect of another request. Requires confirmation.",
+      "zod_schema": "updateProfileSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferredWeightUnit": {
+            "type": "string",
+            "enum": [
+              "lb",
+              "kg"
+            ]
+          },
+          "preferredDistanceUnit": {
+            "type": "string",
+            "enum": [
+              "mi",
+              "km",
+              "m"
+            ]
+          },
+          "trainingGoal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experienceLevel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "injuries": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "equipmentAccess": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "defaultWorkoutDays": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 7
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hasPassword": {
+            "type": "boolean"
+          },
+          "twoFactorEnabled": {
+            "type": "boolean"
+          },
+          "humourLevel": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "responseLength": {
+            "type": "string",
+            "enum": [
+              "brief",
+              "normal",
+              "long"
+            ]
+          },
+          "insightsEnabled": {
+            "type": "boolean"
+          },
+          "pushEnabled": {
+            "type": "boolean"
+          },
+          "confirmBeforeLogging": {
+            "type": "boolean"
+          },
+          "coachPersona": {
+            "type": "string",
+            "enum": [
+              "butterflies",
+              "gym_bro",
+              "coach",
+              "goe",
+              "goggins",
+              "mamacita"
+            ]
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_body_metric",
+      "write": true,
+      "terminal": true,
+      "description": "Propose logging one or more body metrics (weight, body fat, waist). To backfill past or multiple weigh-ins, pass entries: args = { entries: [{ measuredAt?(YYYY-MM-DD; omit for today), bodyweight?, bodyweightUnit?, bodyFatPercentage?, waist?, waistUnit?('in'|'cm' — always include with waist), notes? }] }. A single reading may be passed flat ({ bodyweight, ... }). Always set measuredAt for past dates. Requires confirmation.",
+      "zod_schema": "bodyMetricBatchSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "measuredAt": {
+                  "type": "string"
+                },
+                "bodyweight": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "bodyweightUnit": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "lb",
+                        "kg"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "bodyFatPercentage": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "waist": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "waistUnit": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "in",
+                        "cm"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "notes": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 500
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 60
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_plan",
+      "write": true,
+      "terminal": true,
+      "description": "Propose saving a workout SPLIT/plan/template, or EDITING the user's existing one (NOT a logged session, NOT a one-off session table). Call this SAME TURN for known templates (PPL, upper/lower, full body) — do not reply with only 'I'll start' first. args = { planId?, name?, setActive?, requestedDaysPerWeek?, planType:'weekly'|'free', slots:[{ label?, isRest?, exercises:[string] }] }. ALWAYS pass requestedDaysPerWeek when the user names a frequency ('a 3 day split', 'I train 4 days a week') — the tool REJECTS a plan whose training-day count disagrees with it, and a '3-Day' NAME on a plan with a different training-day count is also rejected. For 'weekly' give EXACTLY 7 slots Mon→Sun — never more (mark rest days with isRest:true and no exercises); for 'free' give up to 14 ordered named sessions. Each slot's exercises array takes objects { name, sets?, reps?, note? } — ALWAYS include a prescription (sets 1-20, reps as the lifter says it: '5', '8-12', 'AMRAP', '20 min') so the plan is executable in-gym; bare name strings are accepted only for a plan the user dictated without numbers. `note` is an optional brief cue (≤140 chars, e.g. 'pause at the chest') — set it only when the user asks for one; on an edit, OMIT note to keep the stored one and pass null only to remove it. Fill real exercises per day (not empty Push/Pull/Legs labels alone). To EDIT the active split (e.g. 'add squats to Wednesday', 'swap my leg day'), FIRST call get_workout_plan, then resend the WHOLE updated plan here with its `planId` so it's replaced in place — omit planId only to create a brand-new split. Requires confirmation. ACTIVATION: saving does NOT make it the active split — pass setActive:true ONLY when the user explicitly said to make it active; otherwise leave it unset and, after they confirm the save, ASK whether they want it active (then call set_active_plan). If the user gave a name for it ('call it 10 lbs loss'), use that exact name. COMPOUND REQUESTS (meal plan AND workout split): deliver create_pending_plan for the split first this turn; run the meal-plan chip interview on following turns — don't no-op, and don't use show_workout_plan for the split.",
+      "zod_schema": "agentPlanSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "setActive": {
+            "type": "boolean"
+          },
+          "requestedDaysPerWeek": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "planType": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "free"
+            ]
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "isRest": {
+                  "type": "boolean"
+                },
+                "exercises": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "sets": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 20
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "reps": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "note": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 140
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "maxItems": 30
+                }
+              },
+              "additionalProperties": false
+            },
+            "maxItems": 14
+          }
+        },
+        "required": [
+          "planType",
+          "slots"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_active_plan",
+      "write": true,
+      "terminal": true,
+      "description": "Make one of the user's SAVED workout splits their active split — applies immediately, no confirmation card. args = { planId? , name? } (one required; name matches case-insensitively). Call this ONLY when the user explicitly asks ('make it my active split', 'switch to PPL', or answers yes when you offer after saving a split). Never activate a split they didn't ask for.",
+      "zod_schema": "setActivePlanArgsSchema",
+      "domains": [
+        "general",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "planId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_macro_log",
+      "write": true,
+      "terminal": true,
+      "description": "Propose logging food as protein/carbs/fat macros (and optional calories + micros). Prefer lookup_nutrition or lookup_barcode first for packaged/branded foods so numbers are grounded; otherwise use your BEST-ESTIMATE macros in grams, OR exact grams when they state them. args = { items:[{ description, proteinG?, carbsG?, fatG?, calories?, micros?, foodId?, isEstimate?, mealType?, groupLabel? }], mealType?('breakfast'|'lunch'|'dinner'|'snack'), date?(YYYY-MM-DD; omit for today) }. When ONE message covers SEVERAL meals ('for breakfast I had eggs, lunch was chicken and rice'), log them ALL in this ONE call and give each item its own mealType + groupLabel ('Breakfast', 'Lunch') so the day log groups them — never log one meal and make the user re-ask for the rest. Always send proteinG, carbsG, and fatG. A calories-only item is rejected — estimate the three grams so 4/4/9 is near the calories and set isEstimate:true. If a lookup returns the wrong food, ignore it and estimate; still call this tool in the same turn. Set isEstimate:false for barcode/FDC-grounded or user-stated grams. The card is EDITABLE. Requires confirmation.",
+      "zod_schema": "parsedMacroSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "proteinG": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5000
+                },
+                "carbsG": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5000
+                },
+                "fatG": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5000
+                },
+                "calories": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 20000
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "isEstimate": {
+                  "type": "boolean"
+                },
+                "micros": {
+                  "type": "object",
+                  "properties": {
+                    "fiberG": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "sugarG": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "satFatG": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "sodiumMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "cholesterolMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "potassiumMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "calciumMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "ironMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "foodId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "mealType": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "breakfast",
+                        "lunch",
+                        "dinner",
+                        "snack"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "groupLabel": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                }
+              },
+              "required": [
+                "description"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 40
+          },
+          "mealType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "breakfast",
+                  "lunch",
+                  "dinner",
+                  "snack"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "manual",
+              "voice",
+              "quick_add",
+              "photo",
+              "barcode",
+              "food_db"
+            ]
+          },
+          "groupLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "lookup_nutrition",
+      "write": false,
+      "terminal": false,
+      "description": "Look up a food in the USDA FoodData Central database (plus Spotter's cache) by name. args = { query:string, limit?:1-10 }. Returns grounded protein/carbs/fat/calories/micros per serving. Use when the user names a food/brand, is unsure of macros, or asks 'what's in X' — then pass the numbers into create_pending_macro_log with isEstimate:false and foodId when present. NEVER invent barcode or label numbers when this tool can answer.",
+      "zod_schema": "lookupNutritionArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "lookup_barcode",
+      "write": false,
+      "terminal": false,
+      "description": "Look up a packaged food by barcode (GTIN/EAN/UPC) via Open Food Facts + cache. args = { barcode:string }. Returns one food with macros/calories/micros, or not_found. After a hit, call create_pending_macro_log with those numbers (isEstimate:false, foodId). If not found, ask the user to describe the food and use lookup_nutrition or estimate.",
+      "zod_schema": "lookupBarcodeArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "barcode": {
+            "type": "string",
+            "minLength": 4,
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "barcode"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_saved_meals",
+      "write": false,
+      "terminal": false,
+      "description": "List the user's named SAVED MEALS (favorites) for quick re-logging. args = {}. Returns { meals:[{ savedMealId, name, mealType, itemCount, proteinG, carbsG, fatG, calories, timesUsed }] }. Call before 'log my usual breakfast' or when they ask what meals they've saved.",
+      "zod_schema": "listSavedMealsArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "save_named_meal",
+      "write": true,
+      "terminal": true,
+      "description": "Propose saving (or replacing) a named meal favorite so the user can re-log it later. args = { name:string, items:[{ description, proteinG?, carbsG?, fatG?, calories?, micros?, foodId? }], mealType?, notes?, id? }. Use after they log a meal and ask to 'save this as usual breakfast', or after a photo log they want to keep. Requires confirmation. Replaces an existing meal with the same name.",
+      "zod_schema": "saveNamedMealArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "mealType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "breakfast",
+                  "lunch",
+                  "dinner",
+                  "snack"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "proteinG": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5000
+                },
+                "carbsG": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5000
+                },
+                "fatG": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 5000
+                },
+                "calories": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 20000
+                },
+                "confidence": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "isEstimate": {
+                  "type": "boolean"
+                },
+                "micros": {
+                  "type": "object",
+                  "properties": {
+                    "fiberG": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "sugarG": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "satFatG": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "sodiumMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "cholesterolMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "potassiumMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "calciumMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    },
+                    "ironMg": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 100000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "foodId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "mealType": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "breakfast",
+                        "lunch",
+                        "dinner",
+                        "snack"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "groupLabel": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                }
+              },
+              "required": [
+                "description"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 40
+          }
+        },
+        "required": [
+          "name",
+          "items"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "log_saved_meal",
+      "write": true,
+      "terminal": true,
+      "description": "Propose logging one of the user's saved meals by savedMealId or name. args = { savedMealId?, name?, date? }. Call list_saved_meals first if you're unsure of the id/name. Produces the same editable macro confirm card as create_pending_macro_log. Requires confirmation.",
+      "zod_schema": "logSavedMealArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "savedMealId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "log_plan_meal",
+      "write": true,
+      "terminal": true,
+      "description": "Propose logging meal OPTION(s) from the user's ACTIVE meal plan — use when they say they ate planned meals ('I just had breakfast', 'had my breakfast, lunch and snack'). args = { mealName?, mealNames?, planId?, date? }. When ONE message attests SEVERAL meals, pass them ALL as mealNames in ONE call — never log one meal and tell the user to ask again for the rest; the day log still groups each meal separately. Names may be partial: 'breakfast' matches 'Breakfast 1' AND 'Breakfast 2'. When a name is ambiguous the tool asks which one with chips — do NOT guess; after they answer, call again with ALL exact names (the clarified one AND every other meal from the original request — the answer did not cancel the rest). Produces one editable macro confirm card. Requires confirmation.",
+      "zod_schema": "logPlanMealArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mealName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "mealNames": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "minItems": 1,
+            "maxItems": 8
+          },
+          "planId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "delete_saved_meal",
+      "write": true,
+      "terminal": true,
+      "description": "Propose deleting a named saved meal the user no longer wants. args = { savedMealId?, name? }. Requires explicit confirmation.",
+      "zod_schema": "deleteSavedMealArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "savedMealId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_macros_today",
+      "write": false,
+      "terminal": false,
+      "description": "Read the user's macro totals for a day — call this for 'how many macros did I eat today', 'how much protein', 'what are my remaining macros'. args = { date?(YYYY-MM-DD; omit for today) }. Returns { date, totals:{proteinG,carbsG,fatG}, targets, remaining, entries }. NEVER invent these numbers — always read them with this tool.",
+      "zod_schema": "getMacrosArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "set_macro_goals",
+      "write": true,
+      "terminal": true,
+      "description": "Propose setting the user's daily macro TARGETS in grams. Pass ONLY the target(s) they mention — 'set my protein target to 180g' → { proteinTargetG:180 }. args = { proteinTargetG?, carbsTargetG?, fatTargetG?, hideNumbers? }. Requires confirmation.",
+      "zod_schema": "setMacroGoalsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "proteinTargetG": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "carbsTargetG": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fatTargetG": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calorieTarget": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hideNumbers": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "show_macro_summary",
+      "write": false,
+      "terminal": true,
+      "description": "Show the user's macro totals for a day as a clean summary card (protein/carbs/fat, vs targets when set). Use when they ask to 'show my macros' or want the visual breakdown. args = { date?(YYYY-MM-DD) }. Display-only — reads real totals, logs nothing.",
+      "zod_schema": "getMacrosArgsSchema",
+      "domains": [
+        "general",
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_nutrition_profile",
+      "write": false,
+      "terminal": false,
+      "description": "Read everything needed to assess a nutrition/weight goal: profile (heightCm, ageYears, biologicalSex, activityLevel — null when the user hasn't shared them), current weight, Mifflin-St Jeor BMR/TDEE estimate, 30-day averages (intake kcal, burned kcal, daily surplus/deficit, days of data), macro/calorie targets, and the active meal plan's name/targets. args = {}. ALWAYS call this FIRST when the user states a weight/nutrition goal ('help me lose 10 lbs in 2 months') — do the feasibility math from these numbers, never from guesses. If fields are missing, ask the user for them (or point them to Profile → Account) before promising results.",
+      "zod_schema": "getNutritionProfileArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_meal_plans",
+      "write": false,
+      "terminal": false,
+      "description": "Read the user's saved meal plans (list) plus the ACTIVE plan in full (meals + items + targets). args = {}. Call before editing a plan ('swap the lunch in my plan') so you can resend the whole updated plan to create_pending_meal_plan with its planId, and for 'what's my meal plan' questions.",
+      "zod_schema": "getMealPlansArgsSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "create_pending_meal_plan",
+      "write": true,
+      "terminal": true,
+      "description": "Propose saving a MEAL PLAN — a named daily template of meals with foods and macro estimates. args = { planId?, name, goal?, mealsPerDay?, snacksPerDay?, preferences?, calorieTarget?, proteinTargetG?, carbsTargetG?, fatTargetG?, meals:[{ name, notes?, items:[{ food, portion?, proteinG?, carbsG?, fatG?, calories? }] }] }. BEFORE calling this for a goal-driven plan: (1) call get_nutrition_profile and do feasibility math INTERNALLY (do not dump TDEE in chat_text), (2) interview with SEPARATE clarification_request turns — ONE question each with 2–6 options: meals/day, then snacks/day, then prefs/allergies (freeTextPlaceholder 'Anything else?'). Never ask meals+snacks as one chat_text. Only skip the chip interview if they said 'just make it' / 'use defaults' or already answered those. COMPOUND with a workout split: still run the chip interview after the workout plan card — do not skip chips solely because the request was multi-part. If they gave a name ('call it 10 lbs loss'), use that exact name. Give every meal real foods with portions and best-estimate macros; meals+snacks each get an entry (name snacks 'Snack 1' etc). To EDIT an existing plan, first get_meal_plans, then resend the WHOLE updated plan with its planId. Requires confirmation; saving makes it the active meal plan and aligns daily macro/calorie targets (say so when proposing).",
+      "zod_schema": "agentMealPlanSchema",
+      "domains": [
+        "nutrition",
+        "compound"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "goal": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mealsPerDay": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snacksPerDay": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calorieTarget": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "proteinTargetG": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "carbsTargetG": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fatTargetG": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "notes": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 300
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "food": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "portion": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "proteinG": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 5000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "carbsG": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 5000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "fatG": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 5000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "calories": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 20000
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "food"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1,
+                  "maxItems": 12
+                }
+              },
+              "required": [
+                "name",
+                "items"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "maxItems": 14
+          },
+          "planId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "meals"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}
