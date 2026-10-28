@@ -31,7 +31,8 @@ def samples(snap):
 
 
 def test_suite_shape(samples):
-    assert len(samples) >= 50
+    assert len(samples) == 70
+    assert sum(s.category == "conversation" for s in samples.values()) == 15
     assert {s.category for s in samples.values()} == set(CATEGORIES)
     for s in samples.values():
         assert s.max_steps == 8
@@ -62,7 +63,11 @@ def test_every_pinned_id_comes_from_the_fixture_user(snap):
     doc = build_spotter_document(snap)
     world = json.dumps(doc["tool_result_sets"]["fixture_user"])
     for sample in doc["samples"]:
-        for uuid in UUID_RE.findall(json.dumps(sample["expected_tool_calls"])):
+        pinned = json.dumps({
+            "calls": sample["expected_tool_calls"],
+            "state": sample.get("expected_state"),
+        })
+        for uuid in UUID_RE.findall(pinned):
             assert uuid in world, (sample["id"], uuid)
 
 

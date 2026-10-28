@@ -1,0 +1,119 @@
+{
+  "id": "0214_forget_knee_remember_shoulder",
+  "category": "conversation",
+  "difficulty": "hard",
+  "prompt": "Remember that I tweaked my left knee and deep squats hurt.",
+  "system_prompt_refs": {
+    "spotter_router": "general.spotter_router",
+    "native": "general.native"
+  },
+  "tool_refs": [
+    "get_user_profile",
+    "update_user_profile",
+    "remember",
+    "forget",
+    "control_rest_timer",
+    "show_table",
+    "search_workouts",
+    "get_recent_workouts",
+    "get_exercise_history",
+    "get_progress_summary",
+    "get_bodyweight_history",
+    "plot_workout_data",
+    "find_exercise_videos",
+    "identify_equipment_from_image",
+    "show_workout_plan",
+    "show_saved_plan",
+    "create_pending_workout_session",
+    "log_planned_workout",
+    "create_pending_workout_edit",
+    "create_pending_workout_delete",
+    "create_pending_exercise_rename",
+    "create_exercise_alias",
+    "create_pending_body_metric",
+    "create_pending_plan",
+    "set_active_plan",
+    "get_workout_plan",
+    "get_progression_suggestions",
+    "create_pending_macro_log",
+    "get_macros_today",
+    "show_macro_summary",
+    "list_saved_meals",
+    "log_saved_meal",
+    "log_plan_meal"
+  ],
+  "expected_tool_calls": [],
+  "scoring": {
+    "require_exact_tool_names": true,
+    "require_exact_arguments": false,
+    "allow_extra_tool_calls": false,
+    "require_order": false,
+    "allow_argument_coercion": false,
+    "trim_string_whitespace": true,
+    "allowed_extra_tools": [
+      "get_bodyweight_history",
+      "get_exercise_history",
+      "get_macros_today",
+      "get_progress_summary",
+      "get_progression_suggestions",
+      "get_recent_workouts",
+      "get_user_profile",
+      "get_workout_plan",
+      "list_saved_meals",
+      "search_workouts"
+    ],
+    "validate_arguments_schema": true
+  },
+  "max_steps": 8,
+  "terminal_tools": [
+    "update_user_profile",
+    "control_rest_timer",
+    "show_table",
+    "plot_workout_data",
+    "find_exercise_videos",
+    "identify_equipment_from_image",
+    "show_workout_plan",
+    "show_saved_plan",
+    "create_pending_workout_session",
+    "log_planned_workout",
+    "create_pending_workout_edit",
+    "create_pending_workout_delete",
+    "create_pending_exercise_rename",
+    "create_exercise_alias",
+    "create_pending_body_metric",
+    "create_pending_plan",
+    "set_active_plan",
+    "create_pending_macro_log",
+    "show_macro_summary",
+    "log_saved_meal",
+    "log_plan_meal"
+  ],
+  "continue_after_terminal": false,
+  "tool_result_set": "fixture_user",
+  "notes": "[general route] Memory is part of the world: the knee fact is gone and the shoulder fact is stored. No workout is created.",
+  "turns": [
+    "Remember that I tweaked my left knee and deep squats hurt.",
+    "The knee is fine now. Forget that.",
+    "Remember that my right shoulder gets cranky on overhead press.",
+    "Don't log a workout."
+  ],
+  "expected_state": {
+    "unchanged_workouts": [
+      "3f8a6c2e-1b4d-4e7a-9c5f-6d2b8e1a4c70",
+      "5c2e9a7d-4f1b-4c8e-a3d6-8b5f2e9c1a34",
+      "8f5b3d1a-7c4e-4f2b-96a9-2e8c5b3f4d67"
+    ],
+    "created_exercises": [],
+    "memories": [
+      {
+        "content": {
+          "$contains": "shoulder"
+        },
+        "kind": "health"
+      }
+    ],
+    "absent_memories": [
+      "knee"
+    ]
+  }
+}

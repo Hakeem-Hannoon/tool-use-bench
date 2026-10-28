@@ -60,15 +60,16 @@ model under two protocols or labels stays separate.
 one counter per primary failure type: `missing_tool_call_failures`,
 `wrong_tool_name_failures`, `schema_violation_failures`,
 `wrong_argument_failures`, `extra_tool_call_failures`, `ordering_failures`,
-`protocol_error_failures`, `provider_error_failures`, `timeout_failures`;
+`world_mismatch_failures`, `protocol_error_failures`,
+`provider_error_failures`, `timeout_failures`;
 and cost/latency fields: `avg_input_tokens`, `avg_cached_input_tokens`,
 `avg_output_tokens` (per run, all steps), `total_cost_usd`,
 `cost_per_run_usd`, `cost_per_successful_run_usd` (`null` without
 `pricing`), `latency_p50_ms`, `latency_p95_ms` (nearest rank, provider
 errors and timeouts excluded), `avg_steps`, `recoveries`. Each failed run
 is counted under exactly one type (precedence: timeout → provider error →
-protocol error → missing → wrong name → schema violation → wrong argument →
-extra → ordering), so the nine counters sum to `failed_runs`.
+protocol error → world mismatch → missing → wrong name → schema violation →
+wrong argument → extra → ordering), so the ten counters sum to `failed_runs`.
 
 ### `category_summaries[]`
 
@@ -101,7 +102,7 @@ most reliable model is shown instead), `model_key`, `label`,
   "failure_type_counts": {
     "missing_tool_call": 0, "wrong_tool_name": 0, "schema_violation": 0,
     "wrong_argument": 0, "extra_tool_call": 0, "ordering_error": 0,
-    "protocol_error": 0, "provider_error": 0, "timeout": 0
+    "world_mismatch": 0, "protocol_error": 0, "provider_error": 0, "timeout": 0
   }
 }
 ```
@@ -126,6 +127,7 @@ most reliable model is shown instead), `model_key`, `label`,
     "argument_errors": [],
     "extra_tool_calls": [],
     "ordering_errors": [],
+    "world_errors": [],
     "reason": "Passed."
   },
   "latency_ms": 1234,
@@ -140,12 +142,17 @@ most reliable model is shown instead), `model_key`, `label`,
   "step_count": 1,
   "recoveries": 0,
   "steps": [{"tool_calls": [], "text": "", "usage": {}, "latency_ms": 1234,
-             "envelope": null, "raw_response": {}}]
+             "envelope": null, "turn": null, "raw_response": {}}],
+  "expected_state": null,
+  "world_state": null
 }
 ```
 
 Expected calls also carry `alternatives` (empty unless the sample lists
-them), and `scoring_result` carries `schema_errors` and `protocol_error`.
+them), and `scoring_result` carries `schema_errors`, `protocol_error`, and
+`world_errors`. `expected_state` and `world_state` are set on conversation
+samples, whose pass/fail is the world diff; `actual_tool_calls` is the
+diagnostic trace. `steps[].turn` is the 1-based user turn on those samples.
 `raw_model_output` (single-step runs) and each step's `raw_response` are
 `null` when `save_raw_responses` is `false`. `steps[].envelope` is set
 under the router protocol: `tool`, `reply`, `prose`, `invalid_json`,

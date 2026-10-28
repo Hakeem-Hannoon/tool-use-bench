@@ -24,6 +24,7 @@ from .reporting import (
 from .samples import load_benchmark_file, samples_hash
 from .schema import ProviderResult, RunRecord, Sample
 from .scoring import classify_failure, score_tool_calls
+from .world import score_world_result
 from .utils.json_utils import atomic_write_json
 from .utils.logging import console, get_logger
 from .utils.time import local_now_iso, utc_now_iso
@@ -56,12 +57,15 @@ def load_default_system_prompt(path: Path = DEFAULT_SYSTEM_PROMPT_PATH) -> str:
 def _record_from_result(sample: Sample, result: ProviderResult,
                         *, save_raw: bool,
                         model_cfg: ModelConfig | None = None) -> RunRecord:
-    scoring = score_tool_calls(
-        sample.expected_tool_calls, result.tool_calls, sample.scoring,
-        error=result.error, timed_out=result.timed_out,
-        protocol_error=result.protocol_error,
-        tool_schemas=sample.tool_schemas(),
-    )
+    if sample.expected_state is not None:
+        scoring = score_world_result(sample, result)
+    else:
+        scoring = score_tool_calls(
+            sample.expected_tool_calls, result.tool_calls, sample.scoring,
+            error=result.error, timed_out=result.timed_out,
+            protocol_error=result.protocol_error,
+            tool_schemas=sample.tool_schemas(),
+        )
     failure = classify_failure(scoring, error=result.error,
                                timed_out=result.timed_out)
     steps = result.steps if save_raw else [
@@ -92,6 +96,9 @@ def _record_from_result(sample: Sample, result: ProviderResult,
         step_count=len(result.steps),
         recoveries=result.recoveries,
         steps=steps,
+        expected_state=(sample.expected_state.model_dump(mode="json")
+                        if sample.expected_state is not None else None),
+        world_state=result.world_state,
     )
 
 
