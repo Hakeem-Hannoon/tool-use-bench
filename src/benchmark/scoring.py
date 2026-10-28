@@ -624,8 +624,9 @@ def classify_failure(result: ScoringResult, *, error: str | None = None,
                      timed_out: bool = False) -> FailureType | None:
     """Return the primary failure type for a failed run, or None on success.
 
-    Precedence: timeout > provider error > protocol error > missing call >
-    wrong name > schema violation > wrong argument > extra call > ordering.
+    Precedence: timeout > provider error > protocol error > world mismatch >
+    missing call > wrong name > schema violation > wrong argument > extra
+    call > ordering.
     Each failed run counts exactly once in summary statistics.
     """
     if result.success:
@@ -636,6 +637,8 @@ def classify_failure(result: ScoringResult, *, error: str | None = None,
         return FailureType.PROVIDER_ERROR
     if result.protocol_error:
         return FailureType.PROTOCOL_ERROR
+    if result.world_errors:
+        return FailureType.WORLD_MISMATCH
     if result.missing_tool_calls:
         return FailureType.MISSING_TOOL_CALL
     if result.wrong_tool_calls:

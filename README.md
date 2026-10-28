@@ -12,10 +12,11 @@ Two suites ship:
 
 - **generic** — 67 single-turn samples over common mock tools (weather,
   email, calendar, GitHub, …).
-- **spotter** — 55 samples built from [Spotter](https://www.spotter-labs.com)'s
+- **spotter** — 70 samples built from [Spotter](https://www.spotter-labs.com)'s
   real agent: its 42 production tools with Zod-derived schemas, its real
   system prompts and domain routing, its JSON-router tool protocol, and
-  multi-step episodes against a fixture user.
+  multi-step episodes against a fixture user. Fifteen of them are
+  multi-turn dialogues scored on the final world rather than one call trace.
 
 ## Why this exists
 
@@ -54,6 +55,9 @@ wins that workload.
   validator such as Zod would reject), when a sample opts in?
 - In **multi-step episodes**, did it act on the data the tools returned —
   e.g. edit a set by the exact id a read gave it?
+- In a **conversation**, does the fixture world end in the right state —
+  the set weights, the deleted ids, the memories — whichever legal trace
+  got there?
 
 ## Out of scope
 
@@ -61,8 +65,9 @@ wins that workload.
   recorded but never scored.
 - Real tool execution — tools are mock schemas. Multi-step samples return
   scripted results; scoring looks only at the call objects a model emits.
-- Multi-turn conversations — every sample is one user message (which may
-  take several model steps).
+- Multi-turn conversations outside the Spotter `conversation` category.
+  Every other sample is one user message (which may take several model
+  steps). The conversation category scores the final world, not reply text.
 
 A run is **successful only if the model emits all required tool calls
 correctly**. Any one of the following fails the entire run:
@@ -79,6 +84,11 @@ correctly**. Any one of the following fails the entire run:
 - the router protocol never produces a parseable envelope (protocol error),
 - the provider call times out, or
 - the provider returns an execution error after retries.
+
+A `conversation` sample replaces that call checklist with the world diff.
+Timeout, a provider error, and a protocol error still fail it. A trace that
+uses different reads or a different grouping passes when the final sets,
+deletes, and memories match.
 
 ## Install
 
@@ -132,8 +142,9 @@ uv run benchmark summarize outputs/results.json
 > (`runs_per_sample: 30` would mean 2,010 calls per model). Six configured
 > models at the default means 2,010 API calls. Start with a tiny config.
 > Spotter episodes can take several steps each and carry a 30–50 KB system
-> prompt, so budget per step — the report's Cost & Latency table shows the
-> real figure after a smoke run.
+> prompt, so budget per step. A conversation sample repeats that loop once
+> per user turn. The report's Cost & Latency table shows the real figure
+> after a smoke run.
 
 ## How scoring works
 
@@ -195,8 +206,9 @@ Scoring is fully deterministic, implemented as plain data comparison.
 ```
 
 Each **failed** run is classified under exactly one primary failure type
-(precedence: timeout → provider error → protocol error → missing call →
-wrong name → schema violation → wrong argument → extra call → ordering) so
+(precedence: timeout → provider error → protocol error → world mismatch →
+missing call → wrong name → schema violation → wrong argument → extra call →
+ordering) so
 summary counters always add up.
 
 ### Success-rate math
@@ -265,6 +277,7 @@ actually does in production:
 | `clarify_or_decline` | 6 | Bare loads, advice, vague logs, chat, the calorie safety floor |
 | `memory_and_privacy` | 2 | Remembering an injury; never storing a medication |
 | `compound` | 2 | Two deliverables in one message |
+| `conversation` | 15 | 3–5 turn dialogues scored on the final world (sets, deletes, memories) |
 
 Refresh after Spotter changes (tools, schemas, prompts, routing):
 
@@ -279,6 +292,28 @@ uv run benchmark run examples/config.spotter.example.json
 
 The export fails loudly when a tool is added, renamed, or removed in
 Spotter; see [`spotter/README.md`](spotter/README.md).
+
+### Conversation track
+
+`conversation` samples are dialogues of three to five user turns on the
+same fixture user. A run passes when the **final world** matches
+`expected_state`: which sets exist and at what weight, which fixture ids
+were deleted, which memories were stored, and which profile fields
+changed. The calls are written on the run and shown in the failure
+appendix, and they are not compared to a gold trace. Reading with
+`search_workouts` or `get_recent_workouts`, or logging two lifts as one
+session or two, both pass when they leave the same state.
+
+Each user turn gets its own `max_steps` budget (production's 8). A
+terminal proposal commits at the end of that turn, so the next message
+can look the write up. A same-day duplicate of an exercise is rejected
+with the existing set ids, and the model has to edit instead. Reads
+answer from the committed world, not from the static script. Schema-invalid
+calls are returned as an error and do not commit, so the model can retry
+inside the turn.
+
+`benchmark spotter-routes` writes every turn, not only the first message,
+for the production route check.
 
 ## The generic dataset
 
@@ -531,7 +566,7 @@ prompts/             default system prompt (generic suite)
 spotter/             gym-bro exporter + the exported snapshot
 analysis/            output schema docs + example report
 src/benchmark/       package: cli, config, schema, runner, episode, router,
-                     scoring, checkpoint, reporting, samples,
+                     scoring, world, checkpoint, reporting, samples,
                      spotter_samples, tool_schemas, providers/, utils/
 tests/               unit tests (offline; scripted fake providers)
 outputs/, reports/   generated artifacts (gitignored)
@@ -557,9 +592,14 @@ outputs/, reports/   generated artifacts (gitignored)
   tracked separately as `provider_error_failures`.
 - Spotter suite scores the model's own decisions. Production adds
   heuristic guards on top (claim, compound, bare-load, delete, and table
-  checks) and feeds Zod errors back for a retry; neither is replayed, so
-  scores are a first-pass floor. Router-protocol name canonicalization and
+  checks) and feeds Zod errors back for a retry; neither is replayed on
+  call-scored samples, so those scores are a first-pass floor.
+  Conversation samples do return a schema error inside the turn and score
+  the world after it. Router-protocol name canonicalization and
   invalid-JSON / unknown-tool nudges *are* replayed.
+- Conversation samples commit each terminal proposal at the end of the
+  user turn. They do not model the confirm-card tap as its own turn, and
+  they do not undo a write the model already committed.
 - JSON Schema can't express Zod refinements ("at least one field",
   "targetId unless target is all"), so schema validation catches type,
   range, enum, format, and extra-key errors but not cross-field rules.

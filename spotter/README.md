@@ -55,3 +55,4 @@ This runs production's `resolveAgentDomain` on every sample prompt and fails
 when a sample declares a different route, or when one of the no-model fast
 paths (macro goals, workout shorthand, today's planned workout) would answer
 it — a sample like that would benchmark traffic the model never sees.
+Conversation samples are checked per turn (`<id>#2`, `<id>#3`, …).

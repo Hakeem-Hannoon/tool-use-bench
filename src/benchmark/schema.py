@@ -131,6 +131,29 @@ class MockToolResult(BaseModel):
     result: Any
 
 
+class ExpectedState(BaseModel):
+    """Final fixture world a multi-turn sample must reach.
+
+    The call trace is not scored. ``unchanged_workouts`` are fixture workout
+    ids whose sets must be untouched. ``workouts`` are subset expectations
+    (matchers allowed) for specific workouts that should have changed.
+    ``created_exercises`` is the pool of exercises in workouts this dialogue
+    created — order and which workout holds them do not matter. ``None``
+    leaves that pool unchecked; an empty list requires no created exercises.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    unchanged_workouts: list[str] = Field(default_factory=list)
+    workouts: list[dict[str, Any]] = Field(default_factory=list)
+    deleted_ids: list[str] = Field(default_factory=list)
+    present_ids: list[str] = Field(default_factory=list)
+    created_exercises: list[dict[str, Any]] | None = None
+    memories: list[dict[str, Any]] = Field(default_factory=list)
+    absent_memories: list[str] = Field(default_factory=list)
+    profile: dict[str, Any] = Field(default_factory=dict)
+
+
 class Sample(BaseModel):
     """One benchmark sample: a prompt, the tools offered, and the expected calls."""
 
@@ -151,6 +174,7 @@ class Sample(BaseModel):
     #: Steps the model may take. 1 = a single response (the classic
     #: single-turn sample). >1 runs an episode: non-terminal calls get a
     #: scripted result from ``tool_results`` and the model continues.
+    #: On a world-scored dialogue this cap applies to each user turn.
     max_steps: int = Field(default=1, ge=1, le=12)
     #: Tools whose call ends the episode (writes, display cards).
     terminal_tools: list[str] = Field(default_factory=list)
@@ -158,6 +182,12 @@ class Sample(BaseModel):
     #: gets a "proposal created" result and may call another tool or reply.
     continue_after_terminal: StrictBool = False
     tool_results: list[MockToolResult] = Field(default_factory=list)
+    #: User turns of a dialogue, including the first. Empty on a one-message
+    #: sample (``prompt`` is the only turn). ``turns[0]`` equals ``prompt``.
+    turns: list[str] = Field(default_factory=list)
+    #: When set, the run passes if the fixture world matches this state.
+    #: The calls the model made are kept on the run and not scored.
+    expected_state: ExpectedState | None = None
     notes: str = ""
 
     @field_validator("tools")
@@ -190,8 +220,26 @@ class Sample(BaseModel):
         for i, mock in enumerate(self.tool_results):
             problems += [f"tool_results[{i}].when.{p}"
                          for p in validate_matchers(mock.when)]
+        if self.expected_state is not None:
+            dumped = self.expected_state.model_dump(mode="json")
+            problems += [f"expected_state.{p}"
+                         for p in validate_matchers(dumped)]
         if problems:
             raise ValueError("invalid matchers: " + "; ".join(problems))
+        return self
+
+    @model_validator(mode="after")
+    def _dialogue_is_world_scored(self) -> "Sample":
+        if self.turns and self.turns[0] != self.prompt:
+            raise ValueError("turns[0] must equal prompt")
+        if any(not turn.strip() for turn in self.turns):
+            raise ValueError("turns must be non-empty strings")
+        if self.turns and self.expected_state is None:
+            raise ValueError("a multi-turn sample must set expected_state")
+        if self.expected_state is not None and not (3 <= len(self.turns) <= 5):
+            raise ValueError(
+                "a world-scored dialogue needs 3 to 5 turns "
+                f"(got {len(self.turns)})")
         return self
 
     def tool_names(self) -> set[str]:
@@ -249,6 +297,8 @@ class EpisodeStep(BaseModel):
     #: Router protocol only: what happened with this step's JSON envelope
     #: ("tool", "reply", "prose", "invalid_json", "unknown_tool").
     envelope: str | None = None
+    #: 1-based user turn inside a dialogue. Unset on a one-message sample.
+    turn: int | None = None
     raw_response: Any = None
 
 
@@ -275,6 +325,10 @@ class ProviderResult(BaseModel):
     #: Router nudges the episode needed (invalid JSON / unknown tool retries)
     #: — production recovers from these, but each one costs a model call.
     recoveries: int = 0
+    #: Final simulated world after a dialogue, or None for a call-scored sample.
+    world_state: Any = None
+    #: The fixture world before any call, kept so the scorer can see what changed.
+    initial_world: Any = None
 
 
 class ArgumentError(BaseModel):
@@ -317,6 +371,8 @@ class ScoringResult(BaseModel):
     ordering_errors: list[str] = Field(default_factory=list)
     schema_errors: list[SchemaError] = Field(default_factory=list)
     protocol_error: str | None = None
+    #: World-scored dialogues only. Empty when the final state matched.
+    world_errors: list[str] = Field(default_factory=list)
     reason: str = ""
 
 
@@ -329,6 +385,7 @@ class FailureType(str, Enum):
     WRONG_ARGUMENT = "wrong_argument"
     EXTRA_TOOL_CALL = "extra_tool_call"
     ORDERING_ERROR = "ordering_error"
+    WORLD_MISMATCH = "world_mismatch"
     PROTOCOL_ERROR = "protocol_error"
     PROVIDER_ERROR = "provider_error"
     TIMEOUT = "timeout"
@@ -368,6 +425,9 @@ class RunRecord(BaseModel):
     step_count: int = 0
     recoveries: int = 0
     steps: list[EpisodeStep] = Field(default_factory=list)
+    #: World-scored dialogues. Both stay null on a call-scored sample.
+    expected_state: Any = None
+    world_state: Any = None
 
     @field_validator("expected_tool_calls", mode="before")
     @classmethod

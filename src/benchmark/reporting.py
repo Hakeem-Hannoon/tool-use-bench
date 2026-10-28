@@ -28,6 +28,7 @@ _FAILURE_COUNT_FIELDS = {
     FailureType.WRONG_ARGUMENT.value: "wrong_argument_failures",
     FailureType.EXTRA_TOOL_CALL.value: "extra_tool_call_failures",
     FailureType.ORDERING_ERROR.value: "ordering_failures",
+    FailureType.WORLD_MISMATCH.value: "world_mismatch_failures",
     FailureType.PROTOCOL_ERROR.value: "protocol_error_failures",
     FailureType.PROVIDER_ERROR.value: "provider_error_failures",
     FailureType.TIMEOUT.value: "timeout_failures",
@@ -616,18 +617,35 @@ def generate_markdown_report(results: dict[str, Any], *,
             for i, step in enumerate(steps, start=1):
                 calls = ", ".join(c["name"] for c in step.get("tool_calls") or []) or "—"
                 envelope = f" [{step['envelope']}]" if step.get("envelope") else ""
+                turn = f"turn {step['turn']}, " if step.get("turn") else ""
                 excerpt = _md_escape((step.get("text") or "")[:160])
-                add(f"{i}. calls: {calls}{envelope}"
+                add(f"{i}. {turn}calls: {calls}{envelope}"
                     + (f" — `{excerpt}`" if excerpt else ""))
             add("")
-        add("Expected tool calls:")
-        add("")
-        add("```json")
-        add(json.dumps(run["expected_tool_calls"], indent=2,
-                       ensure_ascii=False))
-        add("```")
-        add("")
-        add("Actual tool calls:")
+        if run.get("expected_state") is not None:
+            add("Expected world:")
+            add("")
+            add("```json")
+            add(json.dumps(run["expected_state"], indent=2, ensure_ascii=False))
+            add("```")
+            add("")
+            add("Actual world:")
+            add("")
+            add("```json")
+            add(json.dumps(run.get("world_state"), indent=2, ensure_ascii=False,
+                           default=str))
+            add("```")
+            add("")
+            add("Tool calls (recorded, not scored):")
+        else:
+            add("Expected tool calls:")
+            add("")
+            add("```json")
+            add(json.dumps(run["expected_tool_calls"], indent=2,
+                           ensure_ascii=False))
+            add("```")
+            add("")
+            add("Actual tool calls:")
         add("")
         add("```json")
         add(json.dumps(run["actual_tool_calls"], indent=2,

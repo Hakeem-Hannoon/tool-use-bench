@@ -18,6 +18,12 @@ Scoring pins what Spotter needs: tool choice, the numbers, units, dates and
 ids, and argument validity against the Zod-derived schema. Free text (intro,
 summary, captions, titles) is never pinned, and harmless reads before an
 answer are always allowed. Reply text is not scored.
+
+The ``conversation`` category is the exception: each sample is 3–5 user
+turns against this same fixture, and the run passes when the final world
+matches ``expected_state``. The calls are stored on the run and not scored,
+so a read via ``search_workouts`` and a read via ``get_recent_workouts``
+both pass when they leave the same sets, deletes, and memories.
 """
 
 from __future__ import annotations
@@ -50,6 +56,7 @@ CATEGORIES = (
     "clarify_or_decline",
     "memory_and_privacy",
     "compound",
+    "conversation",
 )
 
 # ---------------------------------------------------------------------------
@@ -764,8 +771,216 @@ def build_spotter_samples(snap: dict[str, Any] | None = None) -> list[dict[str, 
           "Meal + lift in one message → a macro card AND a workout card.",
           domain="compound")
 
+    _add_conversations(b, today)
     b.samples.sort(key=lambda s: s["id"])
     return b.samples
+
+
+def _logged(number: int, weight: float, reps: int, unit: str = "lb") -> dict[str, Any]:
+    return {"setNumber": number, "weight": weight, "weightUnit": unit, "reps": reps}
+
+
+def _repeat(weight: float, reps: int, count: int = 3, unit: str = "lb") -> list[dict[str, Any]]:
+    return [_logged(i, weight, reps, unit) for i in range(1, count + 1)]
+
+
+def _created(date: str, name: Any, sets: list[dict[str, Any]]) -> dict[str, Any]:
+    return {"date": date, "name": name, "sets": sets}
+
+
+def _state(**overrides: Any) -> dict[str, Any]:
+    state: dict[str, Any] = {
+        "unchanged_workouts": [W_YDAY, W_PULL, W_PUSH],
+        "created_exercises": [],
+    }
+    state.update(overrides)
+    return state
+
+
+def _add_conversations(b: _Builder, today: str) -> None:
+    """Fifteen dialogues. The final world is the gold; the trace is not.
+
+    Every turn is written to stay on the general route and off the no-model
+    fast paths. A terminal proposal commits at the end of its turn, so the
+    next message can read it back.
+    """
+    row = RX(r"(?i).*(barbell )?rows?")
+
+    def add(num: int, slug: str, turns: list[str], state: dict[str, Any],
+            notes: str) -> None:
+        b.add(num, slug, "conversation", "hard", turns[0], [], notes)
+        b.samples[-1]["turns"] = turns
+        b.samples[-1]["expected_state"] = state
+
+    add(200, "log_then_raise_all", [
+        "Log bench press for today: three sets of 5 at 185 pounds.",
+        "Make all three of those sets 195 pounds.",
+        "Leave yesterday's bench at 185. This is only about the session I just logged.",
+    ], _state(created_exercises=[_created(today, BENCH, _repeat(195, 5))]),
+        "Log a new bench session, then raise every set. Yesterday stays put. "
+        "Any read that finds the new ids is fine.")
+
+    add(201, "only_the_last_set", [
+        "Log bench press for today: 185 pounds for 5, then 185 for 5, then 185 for 5.",
+        "Change all three of those sets to 195.",
+        "Correction: only the last set stays at 195. Put the first two sets back to 185.",
+        "Yesterday's workout stays exactly as it was.",
+    ], _state(created_exercises=[_created(today, BENCH, [
+        _logged(1, 185, 5), _logged(2, 185, 5), _logged(3, 195, 5)])]),
+        "A later turn narrows an edit the previous turn applied to every set.")
+
+    add(202, "log_then_delete_it", [
+        "Log bench press for today, three sets of 5 at 185 pounds.",
+        "Delete that workout I just logged. I added it by mistake.",
+        "Yesterday's lower body session stays.",
+    ], _state(),
+        "The created workout is gone by the end. Fixture sessions stay.")
+
+    yday_bench = {"workoutId": W_YDAY, "exercises": [
+        {"workoutExerciseId": EX_BENCH, "sets": [
+            {"setId": S_B1, "weight": 185, "reps": 5},
+            {"setId": S_B2, "weight": 185, "reps": 5},
+            {"setId": S_B3, "weight": 195, "reps": 5}]},
+        {"workoutExerciseId": EX_SQUAT, "sets": [
+            {"setId": S_Q1, "weight": 315, "reps": 5},
+            {"setId": S_Q2, "weight": 315, "reps": 5},
+            {"setId": S_Q3, "weight": 315, "reps": 5}]}]}
+    add(203, "yesterday_bench_then_narrow", [
+        "The bench press from yesterday should be 195 pounds, not 185.",
+        "Sorry, only the last bench set was 195. The first two sets were 185.",
+        "The squats in that session stay at 315.",
+        "Do not log a new workout.",
+    ], _state(unchanged_workouts=[W_PULL, W_PUSH], workouts=[yday_bench]),
+        "Correct yesterday in place, then undo the first two sets. "
+        "Logging a fresh session fails.")
+
+    add(204, "fix_last_squat_across_turns", [
+        "The last squat set from yesterday was 275 pounds, not 315.",
+        "The first two squat sets really were 315.",
+        "Bench press from that day stays at 185.",
+    ], _state(unchanged_workouts=[W_PULL, W_PUSH], workouts=[{
+        "workoutId": W_YDAY, "exercises": [
+            {"workoutExerciseId": EX_BENCH, "sets": [
+                {"setId": S_B1, "weight": 185, "reps": 5},
+                {"setId": S_B2, "weight": 185, "reps": 5},
+                {"setId": S_B3, "weight": 185, "reps": 5}]},
+            {"workoutExerciseId": EX_SQUAT, "sets": [
+                {"setId": S_Q1, "weight": 315, "reps": 5},
+                {"setId": S_Q2, "weight": 315, "reps": 5},
+                {"setId": S_Q3, "weight": 275, "reps": 5}]}]}]),
+        "One set id changes. The follow-ups must not spread the edit.")
+
+    add(205, "delete_one_set_then_keep_rest", [
+        "Remove the second bench press set from yesterday. I didn't do it.",
+        "The first and third bench sets stay at 185 for 5.",
+        "The squats in that workout stay too.",
+    ], _state(unchanged_workouts=[W_PULL, W_PUSH], deleted_ids=[S_B2],
+              workouts=[{"workoutId": W_YDAY, "exercises": [
+                  {"workoutExerciseId": EX_BENCH, "sets": [
+                      {"setId": S_B1, "weight": 185, "reps": 5},
+                      {"setId": S_B3, "weight": 185, "reps": 5}]},
+                  {"workoutExerciseId": EX_SQUAT, "sets": [
+                      {"setId": S_Q1, "weight": 315, "reps": 5},
+                      {"setId": S_Q2, "weight": 315, "reps": 5},
+                      {"setId": S_Q3, "weight": 315, "reps": 5}]}]}]),
+        "Delete one set id. The other sets in that workout stay.")
+
+    add(206, "delete_squats_keep_bench", [
+        "Delete the squats from yesterday's workout.",
+        "Keep the bench press in that same workout.",
+        "Do not delete the whole session.",
+    ], _state(unchanged_workouts=[W_PULL, W_PUSH],
+              deleted_ids=[EX_SQUAT, S_Q1, S_Q2, S_Q3],
+              present_ids=[W_YDAY, EX_BENCH, S_B1, S_B2, S_B3],
+              workouts=[{"workoutId": W_YDAY, "exercises": [
+                  {"workoutExerciseId": EX_BENCH, "sets": [
+                      {"setId": S_B1, "weight": 185, "reps": 5},
+                      {"setId": S_B2, "weight": 185, "reps": 5},
+                      {"setId": S_B3, "weight": 185, "reps": 5}]}]}]),
+        "Drop one exercise. The workout and its bench sets remain.")
+
+    add(207, "overlap_then_edit", [
+        "Log bench press for today, three sets of 5 at 185 pounds.",
+        "Log bench press for today again, three sets of 5 at 195 pounds.",
+        "If the second log was rejected because today already has bench, "
+        "edit the existing sets to 195.",
+        "There should be one bench session today, not two.",
+    ], _state(created_exercises=[_created(today, BENCH, _repeat(195, 5))]),
+        "A same-day duplicate is rejected with the existing set ids. "
+        "The edit lands on that workout.")
+
+    add(208, "two_lifts_fix_one", [
+        "Today I benched 135 pounds for 8 and squatted 225 pounds for 5.",
+        "The squat was actually a single set at 235 pounds for 5.",
+        "Bench stays one set of 135 for 8.",
+        "Don't change any workout from before today.",
+    ], _state(created_exercises=[
+        _created(today, BENCH, [_logged(1, 135, 8)]),
+        _created(today, SQUAT, [_logged(1, 235, 5)]),
+    ]),
+        "One create or two both pass. The squat weight is the corrected one, "
+        "and no 225 set remains.")
+
+    add(209, "bench_then_rows", [
+        "Log bench press for today, three sets of 5 at 185 pounds.",
+        "I also did barbell rows today, three sets of 8 at 135 pounds. Log those too.",
+        "Leave every workout from before today unchanged.",
+    ], _state(created_exercises=[
+        _created(today, BENCH, _repeat(185, 5)),
+        _created(today, row, _repeat(135, 8)),
+    ]),
+        "A second exercise the same day is not an overlap. "
+        "Grouping the two creates is not pinned.")
+
+    add(210, "knee_memory_then_log", [
+        "Remember that my left knee is cranky and deep squats hurt.",
+        "Log squats for today anyway: three sets of 5 at 225 pounds, nothing deep.",
+        "Keep that knee note saved.",
+        "Don't change yesterday's squat weights.",
+    ], _state(memories=[{"content": HAS("knee"), "kind": "health"}],
+              created_exercises=[_created(today, SQUAT, _repeat(225, 5))]),
+        "The injury is stored, and today's squats are a new session.")
+
+    add(211, "medication_not_stored", [
+        "I'm on 20mg of lexapro, for your context.",
+        "Do not save that medication anywhere.",
+        "Log bench press for today, two sets of 135 pounds for 8.",
+        "The only thing stored from this chat is that bench session.",
+    ], _state(absent_memories=["lexapro"], profile={"injuries": None},
+              created_exercises=[_created(today, BENCH, [
+                  _logged(1, 135, 8), _logged(2, 135, 8)])]),
+        "A remembered medication fails even if a later turn logs the bench. "
+        "Forgetting it before the end passes.")
+
+    add(212, "kg_switch_then_deadlift", [
+        "Switch my weight unit to kilograms.",
+        "Log deadlift for today, three sets of 5 at 140 kilograms.",
+        "Don't rewrite yesterday's weights. Those stay in pounds.",
+        "My unit setting stays kilograms.",
+    ], _state(profile={"preferredWeightUnit": "kg"},
+              created_exercises=[_created(today, DEADLIFT, _repeat(140, 5, unit="kg"))]),
+        "The profile unit flips. Fixture sessions keep their pound loads.")
+
+    add(213, "delete_last_then_spare_older", [
+        "Delete my last workout.",
+        "Yes, that is yesterday's lower and bench session.",
+        "The pull day from earlier stays.",
+        "The push day stays too.",
+    ], _state(unchanged_workouts=[W_PULL, W_PUSH],
+              deleted_ids=[W_YDAY, EX_BENCH, EX_SQUAT, S_B1, S_B2, S_B3,
+                           S_Q1, S_Q2, S_Q3]),
+        "The newest fixture session goes. Older sessions stay, "
+        "whether the delete happens on the first turn or the second.")
+
+    add(214, "forget_knee_remember_shoulder", [
+        "Remember that I tweaked my left knee and deep squats hurt.",
+        "The knee is fine now. Forget that.",
+        "Remember that my right shoulder gets cranky on overhead press.",
+        "Don't log a workout.",
+    ], _state(memories=[{"content": HAS("shoulder"), "kind": "health"}],
+              absent_memories=["knee"]),
+        "Memory is part of the world: the knee fact is gone and the "
+        "shoulder fact is stored. No workout is created.")
 
 
 # ---------------------------------------------------------------------------
@@ -847,7 +1062,11 @@ def dump_prompts_for_route_check(path: Path,
                                  snap: dict[str, Any] | None = None) -> None:
     """Write {sample_id: {prompt, domain}} for the sync script's route check."""
     samples = build_spotter_samples(snap)
-    path.write_text(json.dumps({
-        s["id"]: {"prompt": s["prompt"],
-                  "domain": s["system_prompt_refs"]["native"].split(".")[0]}
-        for s in samples}, indent=2), encoding="utf-8")
+    routes: dict[str, dict[str, str]] = {}
+    for s in samples:
+        domain = s["system_prompt_refs"]["native"].split(".")[0]
+        turns = s.get("turns") or [s["prompt"]]
+        for index, prompt in enumerate(turns):
+            key = s["id"] if index == 0 else f"{s['id']}#{index + 1}"
+            routes[key] = {"prompt": prompt, "domain": domain}
+    path.write_text(json.dumps(routes, indent=2), encoding="utf-8")
